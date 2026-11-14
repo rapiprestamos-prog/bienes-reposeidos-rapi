@@ -3874,7 +3874,7 @@ function mostrarAcceso(modo, mensaje) {
   document.body.className = 'sin-sesion';
   var h = '';
   if (modo === 'instalar') {
-    h = '<h2>Crear el administrador</h2><p>Todavía no hay ningún administrador. Necesitas la clave de instalación: en la hoja de Google, menú <b>Bienes reposeídos → Ver la clave de instalación</b>.</p>' +
+    h = '<h2>Crear el administrador</h2><p>Todavía no hay ningún administrador. Necesitas la clave de instalación: en el editor del script, ejecuta <b>instalar</b> (o <b>verClaveInstalacion</b>) y mírala en el Registro de ejecución.</p>' +
       campo('aClave', 'Clave de instalación', 'password', 'autocomplete="off"') +
       campo('aNombre', 'Nombre completo', 'text', 'maxlength="100"') +
       campo('aUsuario', 'Usuario', 'text', 'maxlength="50" autocomplete="username"') +
