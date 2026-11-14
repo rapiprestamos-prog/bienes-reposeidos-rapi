@@ -858,6 +858,17 @@
   .av-lista-ficha { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
   .av-lista-ficha a, .av-lista-ficha button { background: #fafafc; border-radius: 12px; padding: 8px 12px; box-shadow: inset 0 0 0 1px var(--linea); }
   @media (max-width: 900px) { .vistas { position: static; } .barra { position: static; } }
+
+/* ---- avalúos: histórico mes a mes ---- */
+.av-comp { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:6px 0 12px; }
+.av-comp > div { background:#f5f5f7; border-radius:14px; padding:12px 14px; }
+.av-comp b { display:block; font-size:1.45rem; letter-spacing:-.02em; }
+.av-comp span { color:#6e6e73; font-size:.82rem; }
+.av-hist-det { background:#fbfbfd; padding:14px 18px !important; }
+.av-hist-det details, #upCambios details, #dcCuerpo details { margin:6px 0; }
+.av-mes button { width:100%; text-align:left; border:0; cursor:pointer; font:inherit; background:#eef4ff; color:#1d1d1f; border-radius:14px; padding:12px 16px; margin:0 0 14px; }
+.av-mes button:hover { background:#e2ecff; }
+.av-mes .ok { float:right; color:#0071e3; }
 </style>
 </head>
 <body class="sin-sesion" data-vista="cuadro">
@@ -1120,6 +1131,7 @@
       <button class="btn sec solo-gestor" type="button" onclick="abrirListadoAv()">Subir listado</button>
     </div>
   </div>
+  <div class="av-mes" id="avMes"></div>
   <div class="av-tarjetas" id="avTarjetas"></div>
   <section class="hoja suelta">
     <div class="av-herr">
@@ -1130,6 +1142,11 @@
       <span class="ok" id="avCuenta"></span>
     </div>
     <div id="avLista"><p class="vacio">Cargando…</p></div>
+  </section>
+  <section class="panel" style="margin-top:22px">
+    <h2>Histórico mes a mes</h2>
+    <p class="ok" style="margin:-4px 0 12px">Cada Excel de activos para la venta que se sube queda como un corte. Se compara contra el mes anterior: cuántos activos hay, cuáles entraron, cuáles salieron y cuántos tienen avalúo.</p>
+    <div id="avHist"><p class="vacio">Cargando…</p></div>
   </section>
   <section class="panel" style="margin-top:22px">
     <h2>Fincas activas sin avalúo</h2>
@@ -3666,7 +3683,7 @@ function mostrarVista() {
   if (v.tipo === 'MEJORAS') av = av.concat(htmlComparacionMejoras(v.comparacion, false));
   if (v.duplicado) av.unshift('<div class="aviso">Este mismo archivo ya se subió en la carga #' + v.duplicado.Id + ' (' + esc(fechaHora(v.duplicado.FechaCarga)) + '). Si lo guardas otra vez quedará duplicado.</div>');
   document.getElementById('leidoAvisos').innerHTML = av.join('');
-  document.getElementById('upCambios').innerHTML = htmlCambios(v.cambios, false);
+  document.getElementById('upCambios').innerHTML = (v.tipo === 'ACTIVOS' ? htmlAvaluosCorte(v.avaluos, false) : '') + htmlCambios(v.cambios, false);
 
   var esTraza = v.tipo === 'TRAZABILIDAD';
   document.getElementById('bloqueConteos').hidden = esTraza || v.tipo === 'ACTIVOS' || v.tipo === 'MEJORAS';
@@ -3746,7 +3763,7 @@ document.getElementById('btnGuardar').addEventListener('click', async function (
         htmlComparacionMejoras(r.comparacion, true).join('') + (r.avisos || []).map(function (a) { return '<div class="aviso">' + esc(a) + '</div>'; }).join('');
       document.getElementById('dlgCambios').showModal();
     } else if (r.cambios) {   // resumen de lo que se aplicó
-      document.getElementById('dcCuerpo').innerHTML = htmlCambios(r.cambios, true);
+      document.getElementById('dcCuerpo').innerHTML = (r.tipo === 'ACTIVOS' ? htmlAvaluosCorte(r.avaluos, true) : '') + htmlCambios(r.cambios, true);
       document.getElementById('dlgCambios').showModal();
     }
     document.querySelectorAll('#cuadro td.n').forEach(function (td) { td.classList.add('cambio'); setTimeout(function () { td.classList.remove('cambio'); }, 900); });
@@ -7559,6 +7576,67 @@ async function cargarAvaluos() {
     if (!FINCAS || !FINCAS.length) cargarFincas();
     pintarAvaluos();
   } catch (e) { document.getElementById('avLista').innerHTML = '<div class="vacio">' + esc(e.message) + '</div>'; }
+  try { pintarHistAvaluos((await api('/api/bienes/avaluos/historial')).cortes || []); }
+  catch (e) { document.getElementById('avHist').innerHTML = '<div class="vacio">' + esc(e.message) + '</div>'; }
+}
+// ---- Histórico mes a mes y comparación al subir el Excel de activos ----
+function avDif(n) { return n > 0 ? '+' + n : String(n); }
+function avFincasTxt(l, conAv) {
+  return l.map(function (f) {
+    return '<li><b>' + esc(f.n + (f.c ? '-' + f.c : '')) + '</b>' + (f.d || f.u ? ' — ' + esc([f.d, f.u].filter(Boolean).join(' · ')) : '') +
+      (f.vendida ? ' <span class="av-forma">vendida</span>' : '') + (conAv ? (f.a ? ' <span class="av-forma número">con avalúo</span>' : ' <span class="vence">sin avalúo</span>') : '') + '</li>';
+  }).join('');
+}
+function avBloque(titulo, tono, l, conAv) {
+  if (!l || !l.length) return '';
+  return '<details class="' + tono + '"' + (l.length <= 12 ? ' open' : '') + '><summary>' + esc(titulo) + '<span class="n">' + l.length + '</span></summary><ul>' + avFincasTxt(l, conAv) + '</ul></details>';
+}
+// Resumen "este mes contra el anterior" (lo usan la subida del Excel y el histórico)
+function htmlAvaluosCorte(x, yaGuardado) {
+  if (!x) return '';
+  var ant = x.anterior, mes = function (f) { return f ? fechaCorta(f) : 'sin fecha'; };
+  var h = '<h3>Activos y avalúos' + (ant ? ' <span class="ok" style="font-weight:400">comparado con el corte del ' + esc(mes(ant.Fecha)) + '</span>' : '') + '</h3>';
+  h += '<div class="av-comp">' +
+    '<div><b>' + x.total + '</b><span>activos para la venta' + (ant ? ' · ' + avDif(x.total - ant.total) + ' contra ' + ant.total : '') + '</span></div>' +
+    '<div><b>' + x.conAvaluo + ' / ' + x.total + '</b><span>con avalúo' + (ant ? ' · antes ' + ant.conAvaluo + ' / ' + ant.total : '') + '</span></div>' +
+    (ant ? '<div><b>' + x.entraron.length + '</b><span>entraron</span></div><div><b>' + x.salieron.length + '</b><span>salieron</span></div>' : '') + '</div>';
+  if (!ant) h += '<p class="ok">Es el primer Excel de activos: desde el próximo mes se compara contra este.</p>';
+  h += avBloque('Entraron (no estaban en el corte anterior)', 'nuevo', x.entraron, true) +
+    avBloque('Salieron (estaban en el corte anterior)', 'sale', x.salieron, false) +
+    avBloque('Ya tienen avalúo (antes no tenían)', 'cambia', x.nuevosAvaluos, false) +
+    avBloque((yaGuardado ? 'Quedan sin avalúo' : 'Van a quedar sin avalúo'), 'info', x.sinAvaluo, false);
+  return h;
+}
+var AV_HIST = [];
+function pintarHistAvaluos(l) {
+  AV_HIST = l;
+  var caja = document.getElementById('avHist'), arriba = document.getElementById('avMes'), u = l[0];
+  arriba.innerHTML = u ? '<button type="button" onclick="document.getElementById(\'avHist\').scrollIntoView({behavior:\'smooth\'})">' +
+    '<b>Corte ' + esc(u.Fecha ? fechaCorta(u.Fecha) : 'actual') + ':</b> ' + u.total + ' activos para la venta' +
+    (u.anterior ? ' · <b>' + avDif(u.total - u.anterior.total) + '</b> contra el corte del ' + esc(l[1] && l[1].Fecha ? fechaCorta(l[1].Fecha) : 'mes anterior') +
+      ' (' + u.anterior.total + ') · entraron ' + u.entraron.length + ', salieron ' + u.salieron.length : ' · primer corte') +
+    ' · con avalúo ' + u.conAvaluo + ' de ' + u.total + ' <span class="ok">Ver histórico ›</span></button>' : '';
+  if (!l.length) { caja.innerHTML = '<p class="vacio">Todavía no se ha subido ningún Excel de activos para la venta.</p>'; return; }
+  caja.innerHTML = '<div class="desliz"><table class="datos"><thead><tr><th>Corte</th><th>Archivo</th><th class="n">Activos</th><th class="n">Contra el mes anterior</th>' +
+    '<th class="n">Con avalúo</th><th class="n">Sin avalúo</th><th class="n">Entraron</th><th class="n">Salieron</th><th></th></tr></thead><tbody>' +
+    l.map(function (c, i) {
+      return '<tr><td style="white-space:nowrap"><b>' + esc(c.Fecha ? fechaCorta(c.Fecha) : 'Sin fecha') + '</b>' + (c.enVivo ? '<br><span class="av-forma número">actual</span>' : '') + '</td>' +
+        '<td style="font-size:.84rem">' + esc(c.Archivo || '') + '<br><span class="ok">' + esc(fechaHora(c.FechaCarga)) + ' · ' + esc(c.Usuario || '') + '</span></td>' +
+        '<td class="n"><b>' + c.total + '</b></td>' +
+        '<td class="n">' + (c.anterior ? avDif(c.total - c.anterior.total) + ' <span class="ok">(antes ' + c.anterior.total + ')</span>' : '<span class="ok">primer corte</span>') + '</td>' +
+        '<td class="n">' + c.conAvaluo + '</td><td class="n">' + (c.total - c.conAvaluo) + '</td>' +
+        '<td class="n">' + (c.anterior ? c.entraron.length : '—') + '</td><td class="n">' + (c.anterior ? c.salieron.length : '—') + '</td>' +
+        '<td><a href="#" onclick="verCorteAvaluos(' + i + ');return false">Ver detalle</a></td></tr>' +
+        '<tr id="avHistDet' + i + '" hidden><td colspan="9" class="av-hist-det"></td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+function verCorteAvaluos(i) {
+  var fila = document.getElementById('avHistDet' + i), c = AV_HIST[i];
+  if (!fila.hidden) { fila.hidden = true; return; }
+  var ant = AV_HIST[i + 1] || null;
+  fila.firstChild.innerHTML = '<div class="cambios-arch">' + htmlAvaluosCorte({ anterior: ant ? { Fecha: ant.Fecha, total: ant.total, conAvaluo: ant.conAvaluo } : null, total: c.total, conAvaluo: c.conAvaluo,
+    entraron: c.entraron, salieron: c.salieron, nuevosAvaluos: c.nuevosAvaluos, sinAvaluo: c.sinAvaluo }, true) + '</div>';
+  fila.hidden = false;
 }
 function avFiltrar(t) { AV_FILTRO_T = AV_FILTRO_T === t ? '' : t; document.getElementById('avFiltro').value = ''; pintarAvaluos(); }
 function abrirPdfAvaluo(id) {

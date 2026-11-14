@@ -32,6 +32,7 @@ var ITERACIONES_CLAVE = 1000;  // repeticiones del SHA-256 al cifrar contraseña
 var ROLES = ['ADMIN', 'GESTOR', 'CONSULTA'];
 var MAX_BYTES = 20 * 1024 * 1024;
 var VERSION_SERVIDOR = '2026-11-14';
+
 // ===== Utilidades copiadas tal cual de bienesReposeidos.js =====
 function dosDig(n) { return String(n).padStart(2, '0'); }
 function fechaISO(d) { return d.getUTCFullYear() + '-' + dosDig(d.getUTCMonth() + 1) + '-' + dosDig(d.getUTCDate()); }
@@ -265,6 +266,7 @@ function validarClaveNueva(clave, usuario) {
   return null;
 }
 
+
 // =============================================================================
 // BASE DE DATOS SOBRE LA HOJA
 // Cada tabla es una pestaña. Tipos: I entero · N decimal · B sí/no · F fecha ·
@@ -275,7 +277,7 @@ function validarClaveNueva(clave, usuario) {
 // =============================================================================
 var ESQ = {
   BR_Carga: 'Id:I FechaCarga:T Usuario:S UsuarioId:I NombreArchivo:S TipoArchivo:S FechaReporte:F HashArchivo:S TamanoBytes:I ArchivoId:S ' +
-    'TotalActivos:I EnLegal:I Alquiladas:I ConMejora:I Nota:S Anulada:B FechaAnulada:T UsuarioAnula:S Lectura:J',
+    'TotalActivos:I EnLegal:I Alquiladas:I ConMejora:I Nota:S Anulada:B FechaAnulada:T UsuarioAnula:S Lectura:J Avaluos:J',
   BR_Venta: 'Id:I CargaId:I Tabla:S FechaTabla:F Orden:I NoFinca:S CodigoUbic:S Ubicacion:S Superficie:S ValorVentaNegociado:N ValorLibros:N ' +
     'ValorVentaRapida:N MontoFinanciado:N Cliente:S Ejecutivo:S Estatus:S AntiguoPropietario:S ComisionPagada:N',
   BR_Visita: 'Id:I CargaId:I Orden:I NoFinca:S CodigoUbic:S Ubicacion:S TipoPropiedad:S Condicion:S Letrero:S Observaciones:S Limpieza:S ProximaLimpieza:S',
@@ -578,6 +580,7 @@ function archivoRespuesta_(nombre, b64) {
   return { success: true, __archivo: { nombre: nombre, tipo: TIPOS_MIME[extension_(nombre)] || 'application/octet-stream', b64: b64 } };
 }
 
+
 // =============================================================================
 // ENTRADA WEB, RUTAS Y SEGURIDAD
 // La página manda: { m: método, p: ruta (/api/bienes/...), q: query, b: cuerpo, t: token }
@@ -727,6 +730,7 @@ function claveInstalacion_() { return PropertiesService.getScriptProperties().ge
 
 // ---- quita los campos internos antes de mandar filas a la página ----
 function limpio_(o) { return o; }
+
 
 // =============================================================================
 // SESIÓN, INSTALACIÓN Y USUARIOS
@@ -890,6 +894,7 @@ ruta_('GET', '/api/bienes/bitacora', 'admin', function () {
   return { success: true, eventos: ev };
 });
 
+
 // =============================================================================
 // AYUDAS PARA CONSULTAR (lo que en SQL era ORDER BY, TOP, etc.)
 // =============================================================================
@@ -952,6 +957,7 @@ function registrarCambio_(noFinca, campo, antes, despues, usuario) {
     ValorNuevo: despues === null || despues === undefined ? null : String(despues).slice(0, 500), Usuario: usuario });
 }
 function fincaDe_(nf) { return T_('BR_Finca').filter(function (f) { return f.NoFinca === nf; })[0] || null; }
+
 
 // =============================================================================
 // EXCEL DE ACTIVOS → DASHBOARD
@@ -1271,7 +1277,8 @@ ruta_('POST', '/api/bienes/cargar', 'gestor', function (ctx) {
     var cmp = compararActivos_(libro.activos);
     var porEstado = {}; libro.activos.forEach(function (a) { porEstado[a.EstadoExcel] = (porEstado[a.EstadoExcel] || 0) + 1; });
     var anteriorAct = ultimaActivos_();
-    var resultado = { tipo: 'ACTIVOS', fechaReporte: libro.fechaReporte, fuenteFecha: fuenteFecha, avisos: libro.avisos,
+    var compAv = null; try { compAv = comparacionAvaluosExcel_(libro.activos); } catch (e) { anotar_('no se pudo comparar los avalúos', e); }
+    var resultado = { tipo: 'ACTIVOS', fechaReporte: libro.fechaReporte, fuenteFecha: fuenteFecha, avisos: libro.avisos, avaluos: compAv,
       cambios: { anterior: anteriorAct ? copia_(anteriorAct, ['Id', 'NombreArchivo', 'FechaReporte', 'FechaCarga', 'Usuario']) : null, grupos: gruposActivos_(cmp, libro.activos) },
       activos: { total: libro.activos.length, porEstado: porEstado, desalojo: (libro.desalojo || []).length,
         anos: Array.from(new Set((libro.ventasAnteriores || []).map(function (v) { return v.Anio; }))).sort().reverse(), ventasAnteriores: (libro.ventasAnteriores || []).length,
@@ -1282,9 +1289,14 @@ ruta_('POST', '/api/bienes/cargar', 'gestor', function (ctx) {
           return Object.assign({ Activa: true }, a, a.SinEstado && f ? { Estado: f.Estado, Alquilada: f.Alquilada, Ocupada: f.Ocupada } : {}); })) } };
     if (b.soloVista) return Object.assign({ success: true, vista: true, duplicado: dup }, resultado);
     if (dup && !b.forzar) return { success: false, status: 409, duplicado: dup, error: 'Este mismo archivo ya se subió (carga #' + dup.Id + ').' };
+    // El corte que termina queda fijo con los avalúos que tiene hoy (para el histórico mes a mes)
+    if (anteriorAct && anteriorAct.Lectura && anteriorAct.Lectura.activos) {
+      try { upd_('BR_Carga', anteriorAct, { Avaluos: fotoAvaluos_(anteriorAct.Lectura.activos) }); } catch (e) { anotar_('no se pudo guardar la foto de avalúos', e); }
+    }
     var c = insertarCarga_(ctx, b, 'ACTIVOS', libro.fechaReporte, { Lectura: { activos: libro.activos, ventasAnteriores: libro.ventasAnteriores || [],
       desalojo: libro.desalojo || [], pie: libro.pie || null, fechaReporte: libro.fechaReporte } });
     guardarDatosActivos_(libro, c.Id, ctx.br.Nombre);
+    try { upd_('BR_Carga', c, { Avaluos: fotoAvaluos_(libro.activos) }); } catch (e) { anotar_('no se pudo guardar la foto de avalúos', e); }
     bitacora_(ctx, 'CARGAR', 'Carga #' + c.Id + ' ACTIVOS: ' + libro.activos.length + ' activos, ' + cmp.nuevas.length + ' nuevos, ' +
       cmp.cambios.length + ' con cambios, ' + cmp.retiradas.length + ' retirados · ' + nombre);
     return Object.assign({ success: true, cargaId: c.Id }, resultado);
@@ -1485,6 +1497,7 @@ ruta_('GET', '/api/bienes/fincas', 'cualquiera', function () {
   l.sort(function (a, b) { return String(a.NoFinca).localeCompare(String(b.NoFinca)); });
   return { success: true, fincas: l };
 });
+
 
 // =============================================================================
 // INVENTARIO DE FINCAS (DASHBOARD)
@@ -1747,6 +1760,7 @@ ruta_('GET', '/api/bienes/inventario-exportar', 'cualquiera', function (ctx) {
   return { success: true, __excel: 'inventario', nombre: 'Inventario_bienes_reposeidos_' + hoyISO_() + '.xlsx', filas: inv.filas };
 });
 
+
 // =============================================================================
 // VENTAS ANOTADAS A MANO
 // =============================================================================
@@ -1924,6 +1938,7 @@ ruta_('POST', '/api/bienes/cargas/:id/anular', 'gestor', function (ctx) {
 ruta_('GET', '/api/bienes/estado', 'cualquiera', function () {
   return { success: true, base: libro_().getName(), servidor: 'Google Sheets', cargas: T_('BR_Carga').filter(function (c) { return !c.Anulada; }).length };
 });
+
 
 // =============================================================================
 // CONTROL DE ALQUILERES
@@ -2114,6 +2129,7 @@ ruta_('POST', '/api/bienes/alquileres/importar', 'gestor', function (ctx) {
 ruta_('GET', '/api/bienes/alquileres/excel', 'cualquiera', function () {
   return { success: true, __excel: 'alquileres', nombre: 'Control_de_Alquileres_' + hoyISO_() + '.xlsx', contratos: leerAlquileresBD_(), hoy: hoyISO_() };
 });
+
 
 // =============================================================================
 // GESTIÓN DE CAMPO
@@ -2340,6 +2356,7 @@ ruta_('GET', '/api/bienes/documentos/:id/adjunto', 'cualquiera', function (ctx) 
   return archivoRespuesta_(f.AdjuntoNombre, leerArchivo_(f.AdjuntoId));
 });
 
+
 // =============================================================================
 // AVALÚOS (nuevo)
 // Lista de PDF de avalúos (enlaces de SharePoint/OneDrive o PDF subidos aquí).
@@ -2436,6 +2453,82 @@ ruta_('GET', '/api/bienes/avaluos', 'cualquiera', function () {
       manual: l.filter(function (a) { return a.Forma === 'manual'; }).length, sinFinca: l.filter(function (a) { return !a.Fincas.length; }).length,
       activasConAvaluo: activas.length - sinAv.length } };
 });
+// =============================================================================
+// HISTÓRICO DE AVALÚOS MES A MES
+// Cada Excel de activos que se sube es un corte. De cada corte se guarda una foto:
+// qué fincas había y cuántos avalúos tenía cada una. El corte más reciente se
+// calcula siempre en vivo; cuando llega el Excel del mes siguiente, la foto del
+// mes que termina queda fija (con los avalúos que se agregaron durante el mes).
+// =============================================================================
+// Universo de fincas más las del Excel que todavía no están (para la vista previa)
+function universoCon_(activos) {
+  var U = universoFincas_();
+  (activos || []).forEach(function (a) {
+    if (!a.NoFinca || U[a.NoFinca]) return;
+    var w = {}; palabras_(a.Deudor || '').forEach(function (p) { w[p] = 1; });
+    U[a.NoFinca] = { NoFinca: a.NoFinca, nombres: a.Deudor ? [a.Deudor] : [], Estado: a.Estado || null, Activa: true, Ubicacion: a.Ubicacion || null, CodigoUbic: a.CodigoUbic || null, pal: w };
+  });
+  return U;
+}
+function avaluosPorNumero_(U) {
+  var por = {};
+  T_('BR_Avaluo').forEach(function (a) {
+    if (a.Anulado) return;
+    unirAvaluo_(a, U).fincas.forEach(function (f) { if (!f.noEsta) por[f.NoFinca] = (por[f.NoFinca] || 0) + 1; });
+  });
+  return por;
+}
+// Foto de un corte: { total, conAvaluo, fincas: [{ n: finca, c: código, u: ubicación, d: deudor, a: nº de avalúos }] }
+function fotoAvaluos_(activos, U, por) {
+  U = U || universoCon_(activos); por = por || avaluosPorNumero_(U);
+  var corta = function (v, n) { return v ? String(v).trim().slice(0, n) : null; };
+  var fincas = (activos || []).filter(function (a) { return a.NoFinca; }).map(function (a) {
+    return { n: a.NoFinca, c: corta(a.CodigoUbic, 20), u: corta(a.Ubicacion, 80), d: corta(a.Deudor, 80), a: por[a.NoFinca] || 0 }; });
+  return { total: fincas.length, conAvaluo: fincas.filter(function (f) { return f.a; }).length, fincas: fincas, fecha: ahora_() };
+}
+function cortesActivos_() {   // del más antiguo al más reciente
+  return ordenCortes_(T_('BR_Carga').filter(function (c) { return !c.Anulada && c.TipoArchivo === 'ACTIVOS'; })).reverse();
+}
+// Compara dos fotos (la anterior puede faltar)
+function compararFotos_(antes, ahora, U) {
+  var A = {}, B = {};
+  (antes ? antes.fincas : []).forEach(function (f) { A[f.n] = f; });
+  ahora.fincas.forEach(function (f) { B[f.n] = f; });
+  var vendida = function (n) { var x = U && U[n]; return !!(x && (x.Vendida || x.Estado === 'VENDIDA')); };
+  return {
+    entraron: antes ? ahora.fincas.filter(function (f) { return !A[f.n]; }) : [],
+    salieron: antes ? antes.fincas.filter(function (f) { return !B[f.n]; }).map(function (f) { return Object.assign({ vendida: vendida(f.n) }, f); }) : [],
+    nuevosAvaluos: antes ? ahora.fincas.filter(function (f) { return A[f.n] && !A[f.n].a && f.a; }) : [],
+    sinAvaluo: ahora.fincas.filter(function (f) { return !f.a; })
+  };
+}
+function datosCorte_(c) { return { CargaId: c.Id, Fecha: c.FechaReporte, Archivo: c.NombreArchivo, FechaCarga: c.FechaCarga, Usuario: c.Usuario }; }
+function historialAvaluos_() {
+  var cortes = cortesActivos_(), U = universoFincas_(), por = null, out = [], antes = null;
+  cortes.forEach(function (c, i) {
+    var ultimo = i === cortes.length - 1, foto = !ultimo && c.Avaluos && c.Avaluos.fincas ? c.Avaluos : null;
+    if (!foto) { por = por || avaluosPorNumero_(U); foto = fotoAvaluos_((c.Lectura && c.Lectura.activos) || [], U, por); }
+    var cmp = compararFotos_(antes, foto, U);
+    out.push(Object.assign(datosCorte_(c), { total: foto.total, conAvaluo: foto.conAvaluo, sinAvaluo: cmp.sinAvaluo, entraron: cmp.entraron,
+      salieron: cmp.salieron, nuevosAvaluos: cmp.nuevosAvaluos, anterior: antes ? { total: antes.total, conAvaluo: antes.conAvaluo } : null, enVivo: ultimo }));
+    antes = foto;
+  });
+  return out.reverse();   // el más reciente primero
+}
+// Lo que se muestra al subir el Excel de activos: este mes contra el corte anterior
+function comparacionAvaluosExcel_(activos) {
+  var cortes = cortesActivos_(), ult = cortes[cortes.length - 1] || null;
+  var U = universoCon_(activos), por = avaluosPorNumero_(U);
+  var ahora = fotoAvaluos_(activos, U, por);
+  var antes = ult ? fotoAvaluos_((ult.Lectura && ult.Lectura.activos) || [], U, por) : null;
+  var cmp = compararFotos_(antes, ahora, U);
+  return Object.assign({ anterior: ult ? Object.assign(datosCorte_(ult), { total: antes.total, conAvaluo: antes.conAvaluo }) : null,
+    total: ahora.total, conAvaluo: ahora.conAvaluo }, cmp);
+}
+ruta_('GET', '/api/bienes/avaluos/historial', 'cualquiera', function () {
+  return { success: true, cortes: historialAvaluos_() };
+});
+
 // Listado (CSV o Excel con columnas Archivo y Link): agrega lo nuevo y conserva lo que ya estaba
 function importarAvaluos_(filas, origen, usuario, soloVista) {
   var ya = {};
