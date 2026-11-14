@@ -21,7 +21,7 @@
    ============================================================================= */
 
 // ID de la hoja (entre /d/ y /edit en su dirección). Vacío = la hoja donde está pegado el script.
-var HOJA_ID = '';
+var HOJA_ID = '1MuDMY4d0KZqGwjBGW0g90J7r_qXS2hxhR6V_5C9_3PI';   // hoja "Bienes reposeidos - base" (proyectosrapiprestamos)
 var ZONA = 'America/Panama';
 
 var HORAS_SESION = 8;          // la sesión vence sola a las 8 horas
