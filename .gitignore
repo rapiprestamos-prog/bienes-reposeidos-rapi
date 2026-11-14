@@ -1,0 +1,7 @@
+privado/
+Privado.gs
+Plantillas.gs
+Datos.gs
+*.xlsx
+*.csv
+.DS_Store
