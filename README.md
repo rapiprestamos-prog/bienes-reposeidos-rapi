@@ -10,24 +10,24 @@ Tiene las mismas 6 secciones del sistema anterior (Cuadro y ventas, Gestión de 
 
 > **Datos privados:** las plantillas de minutas y el listado inicial de avalúos tienen nombres y cédulas, así que **no están en este repositorio**, porque es público. Van en el archivo `Privado.gs`, que se entrega aparte y se pega solo en Apps Script.
 
-## Puesta en marcha (una sola vez)
+## Cómo quedó instalado
 
-1. **Hoja de Google.** Entra a Google Drive con la cuenta **proyectosrapiprestamos** y crea una hoja nueva, por ejemplo "Bienes reposeídos – base". No la compartas: la página entra por el script.
-2. **Pegar el código.** En la hoja: **Extensiones → Apps Script**.
-   - Borra lo que trae `Código.gs`, pega **todo** `apps-script/Code.gs` y guarda.
-   - Crea un archivo nuevo con **+ → Secuencia de comandos**, ponle de nombre `Privado`, pega todo `Privado.gs` (el archivo aparte) y guarda.
-3. **Instalar.** Recarga la hoja. Aparece el menú **Bienes reposeídos → Instalar**. Ejecútalo y acepta los permisos (hoja y Drive).
+- **Hoja:** "Bienes reposeidos - base", en Drive de **proyectosrapiprestamos**. No se comparte: la página entra por el script.
+- **Script:** proyecto aparte "Bienes reposeídos - servidor" (script.google.com, cuenta proyectosrapiprestamos), con dos archivos:
+  - `Código.gs` = `apps-script/Code.gs` (ya trae el ID de la hoja en `HOJA_ID`);
+  - `Privado.gs` = plantillas y listado de avalúos (no está en este repositorio).
+- **Publicado como aplicación web** (Ejecutar como: Yo · Acceso: Cualquier usuario). Su URL `/exec` ya está puesta en `index.html`.
+- **Página:** https://rapiprestamos-prog.github.io/bienes-reposeidos-rapi/
+
+### Primera vez
+
+1. En el editor del script elige la función **`instalar`** y pulsa **Ejecutar**. La primera vez Google pide permisos (hoja y Drive): **Revisar permisos → tu cuenta → Configuración avanzada → Ir a Bienes reposeídos - servidor → Permitir**.
    - Crea las pestañas, la carpeta de archivos, las 14 plantillas y los 82 avalúos.
-   - Te muestra la **clave de instalación**. Si la pierdes, está en el menú **Ver la clave de instalación**.
-4. **Publicar el script.** En Apps Script: **Implementar → Nueva implementación → ⚙ → Aplicación web**.
-   - *Ejecutar como:* **Yo** · *Quién tiene acceso:* **Cualquier usuario**.
-   - Copia la URL que termina en **`/exec`**.
-5. **Conectar la página.** En `index.html`, busca `PEGAR_AQUI_LA_URL_DEL_APPS_SCRIPT` y pon esa URL. Si la página todavía no la tiene, también se puede pegar en el recuadro que aparece al abrirla.
-6. **GitHub Pages.** En el repositorio: **Settings → Pages → Branch: `main` / `(root)` → Save**. En un minuto queda en `https://rapiprestamos-prog.github.io/bienes-reposeidos-rapi/`.
-7. **Primer ingreso.** La página pide la clave de instalación para crear al **administrador**: tu nombre, tu usuario y tu contraseña.
-8. **Tu equipo.** En **Usuarios** crea a cada persona con su rol. La contraseña que pones es temporal y la cambian al entrar.
+   - En el **Registro de ejecución** sale la **clave de instalación**. Si la pierdes, ejecuta **`verClaveInstalacion`**.
+2. Abre la página. Pide la clave de instalación para crear al **administrador**: tu nombre, tu usuario y tu contraseña.
+3. En **Usuarios** crea a cada persona con su rol. La contraseña que pones es temporal y la cambian al entrar.
 
-> Cada vez que cambies `Code.gs`: **Implementar → Gestionar implementaciones → ✏ → Versión: Nueva → Implementar**. Así la URL no cambia.
+> Cada vez que cambies el código del script: **Implementar → Gestionar implementaciones → ✏ → Versión: Nueva → Implementar**. Así la URL no cambia.
 
 ## Roles
 

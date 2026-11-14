@@ -1576,7 +1576,7 @@
 (function () {
   'use strict';
   // URL de la aplicación web de Apps Script (termina en /exec).
-  var URL_FIJA = 'PEGAR_AQUI_LA_URL_DEL_APPS_SCRIPT';
+  var URL_FIJA = 'https://script.google.com/macros/s/AKfycbzksqHyIr1N13az-EPB-Rx0qlhU2MBJg6Nr9ftnBu8bO3ss4uvb9bqolqLu-jAISiA5PQ/exec';
   var CLAVE_URL = 'br_api_url', CLAVE_TOKEN = 'br_token';
   function guardado(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function guardar(k, v) { try { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) { /* modo privado */ } }
