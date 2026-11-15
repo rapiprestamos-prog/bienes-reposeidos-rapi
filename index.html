@@ -869,6 +869,39 @@
 .av-mes button { width:100%; text-align:left; border:0; cursor:pointer; font:inherit; background:#eef4ff; color:#1d1d1f; border-radius:14px; padding:12px 16px; margin:0 0 14px; }
 .av-mes button:hover { background:#e2ecff; }
 .av-mes .ok { float:right; color:#0071e3; }
+/* ---- aviso de cierre por inactividad ---- */
+#avisoInact { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:9999; display:flex; gap:16px; align-items:center;
+  background:rgba(29,29,31,.94); color:#fff; padding:14px 16px 14px 20px; border-radius:18px; box-shadow:0 12px 40px rgba(0,0,0,.35);
+  -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); max-width:calc(100vw - 32px); }
+#avisoInact[hidden] { display:none; }
+#avisoInact div { display:flex; flex-direction:column; gap:2px; font-size:.9rem; }
+#avisoInact div > b { font-size:1rem; }
+#avisoInact .btn { margin:0; white-space:nowrap; }
+/* ---- reporte de activos disponibles para la venta ---- */
+body:not([data-vista="activos"]) #vistaActivos { display: none; }
+body.sin-sesion #vistaActivos { display: none !important; }
+#vistaActivos { max-width: 1600px; margin: 0 auto; padding: 22px 28px 40px; }
+.act-corte { display:flex; align-items:center; gap:8px; font-size:.9rem; color:#6e6e73; }
+.act-corte select { min-width: 280px; }
+.act-comp { margin: 0 0 18px; }
+.act-titulo { text-align:center; margin: 2px 0 14px; display:flex; flex-direction:column; gap:2px; }
+.act-titulo b { font-size:1.15rem; } .act-titulo span { color:#3a3a3c; }
+.act-filtros { display:flex; gap:10px; align-items:center; margin: 0 0 12px; flex-wrap:wrap; }
+.act-filtros input { flex:1; min-width:240px; }
+.act-desliz { max-height: 70vh; overflow:auto; }
+.act-tabla { font-size:.8rem; }
+.act-tabla thead th { position: sticky; top: 0; z-index: 1; }
+.act-tabla thead tr:nth-child(2) th { top: 30px; }
+.act-tabla th.c { text-align:center; }
+.act-tabla td.act-largo { min-width: 260px; max-width: 380px; white-space: normal; }
+.act-tabla tr.act-nueva td { background: #f0faf2; }
+.act-tabla tfoot td { position: sticky; bottom: 0; background: #f5f5f7; border-top: 2px solid #d2d2d7; }
+.act-comp > div { background:#fff; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.av-comp span strong { font-size:inherit; color:#1d1d1f; }
+#vistaActivos input[type=search], #vistaActivos select { font:inherit; font-size:.92rem; padding:9px 12px; border:1px solid #d2d2d7; border-radius:12px; background:#fff; }
+#vistaActivos input[type=search] { border-radius:999px; padding-left:16px; }
+#vistaActivos input[type=search]:focus, #vistaActivos select:focus { outline:none; border-color:#0071e3; box-shadow:0 0 0 3px rgba(0,113,227,.18); }
+.act-tabla td:last-child { white-space:nowrap; }
 </style>
 </head>
 <body class="sin-sesion" data-vista="cuadro">
@@ -889,6 +922,7 @@
   <button type="button" data-v="dash" onclick="irVista('dash')">Dashboard</button>
   <button type="button" data-v="graficas" onclick="irVista('graficas')">Gráficas gerenciales</button>
   <button type="button" data-v="alquileres" onclick="irVista('alquileres')">Alquileres</button>
+  <button type="button" data-v="activos" onclick="irVista('activos')">Activos para la venta</button>
   <button type="button" data-v="avaluos" onclick="irVista('avaluos')">Avalúos</button>
 </nav>
 <datalist id="dlFincas"></datalist>
@@ -1120,6 +1154,33 @@
   <section class="panel ancho" style="margin-top:18px"><h2>Contratos</h2><div id="alLista"></div></section>
   <section class="panel ancho" style="margin-top:18px"><h2>Excel subidos</h2><div id="alCargas"></div></section>
 </main>
+
+<!-- ================= ACTIVOS DISPONIBLES PARA LA VENTA ================= -->
+<main id="vistaActivos">
+  <div class="av-cab">
+    <div><h2>Activos disponibles para la venta</h2>
+      <p>El reporte de cada mes, igual al Excel que se sube, con el avalúo de cada finca y la comparación contra el mes anterior.</p></div>
+    <div class="av-botones">
+      <label class="act-corte">Corte <select id="actCorte" onchange="cargarActivosVenta(this.value)"></select></label>
+      <button class="btn sec" type="button" onclick="excelActivosVenta()">Descargar Excel</button>
+    </div>
+  </div>
+  <div id="actResumen"></div>
+  <section class="panel act-reporte">
+    <div class="act-titulo" id="actTitulo"></div>
+    <div class="act-filtros">
+      <input id="actBuscar" type="search" placeholder="Buscar finca, deudor, ubicación u observación" oninput="pintarActivosVenta()">
+      <select id="actFiltro" onchange="pintarActivosVenta()">
+        <option value="">Todas</option><option value="nueva">Solo las que entraron este mes</option>
+        <option value="conav">Con avalúo</option><option value="sinav">Sin avalúo</option>
+      </select>
+      <span id="actCuenta" class="ok"></span>
+    </div>
+    <div class="desliz act-desliz"><table class="datos act-tabla" id="actTabla"></table></div>
+  </section>
+  <section class="panel" id="actSalieron" hidden style="margin-top:22px"></section>
+</main>
+
 
 <!-- ================= AVALÚOS ================= -->
 <main id="vistaAvaluos">
@@ -1604,6 +1665,11 @@
     return guardado(CLAVE_URL) || '';
   }
   window.BR_URL_API = urlApi;
+  // Si la página estuvo cerrada más de 10 minutos sin uso, la sesión guardada ya no sirve
+  (function () {
+    var ult = +(guardado('br_ultima') || 0);
+    if (guardado(CLAVE_TOKEN) && ult && Date.now() - ult > 10 * 60000) { guardar(CLAVE_TOKEN, ''); guardar('br_ultima', ''); window.BR_INACTIVO = true; }
+  })();
   window.BR_PONER_URL = function (u) { guardar(CLAVE_URL, String(u || '').trim()); };
 
   // ===== Lectura del Excel: copiada de bienesReposeidos.js =====
@@ -1936,8 +2002,9 @@ function leerActivos(wb, avisos) {
     alquilado: col('alquilado'), letrero: col('letrero'), ubic: col('ubicacion'), detalle: col('detalledelapropiedad'),
     m2: col('m2'), tipo: col('tipo'), terreno: col('terrenoauto', 'terreno'), mejoras: col('mejoras'), mercado: col('valordemercado'),
     dias: col('diastranscurridos'), fideicomiso: col('fideicomiso', 'fideidcomiso'), deterioro: col('valordeperdida'), provision: col('totaldeprovision'),
-    rapida: col('valordeventarapida'), libros: col('valorenlibros'), estado: col('estado')
+    rapida: col('valordeventarapida'), libros: col('valorenlibros'), estado: col('estado'), politica: col('politica'), pct: null
   };
+  ws.getRow(rh).eachCell((c, j) => { if (!C.pct && String(texto(valor(c)) || '').trim() === '%') C.pct = j; });
   const ESTADOS = { DISPONIBLE: ['DISPONIBLE', false, false], ALQUILADA: ['DISPONIBLE', true, false], VIVENPERSONAS: ['DISPONIBLE', false, true],
     ENTRAMITE: ['EN_TRAMITE', false, false], ENLEGAL: ['LEGAL', false, false], VENDIDA: ['VENDIDA', false, false] };
   const filas = [], vistos = {};
@@ -1988,7 +2055,8 @@ function leerActivos(wb, avisos) {
       Dias: C.dias ? (numero(propio(C.dias ? fila.getCell(C.dias) : null)) !== null ? Math.round(numero(propio(C.dias ? fila.getCell(C.dias) : null))) : null) : null,
       Fideicomiso: C.fideicomiso ? texto(propio(C.fideicomiso ? fila.getCell(C.fideicomiso) : null)) : null,
       ValorTerreno: num(C.terreno), Deterioro: num(C.deterioro), Provision: num(C.provision),
-      NoSeVende: rojas >= Math.ceil(ultimaCol * 0.6), PolizaIncendio: poliza
+      NoSeVende: rojas >= Math.ceil(ultimaCol * 0.6), PolizaIncendio: poliza,
+      Porcentaje: num(C.pct), Politica: C.politica ? texto(propio(fila.getCell(C.politica))) : null
     });
   }
   return { hoja: ws.name, filas, fecha, pie: marcas.pie };
@@ -4138,6 +4206,7 @@ function irVista(v) {
   if (v === 'dash') cargarInventario();
   if (v === 'graficas') cargarGraficas();
   if (v === 'alquileres') cargarAlquileres();
+  if (v === 'activos') cargarActivosVenta();
   if (v === 'avaluos') cargarAvaluos();
 }
 
@@ -7774,6 +7843,196 @@ async function guardarListadoAv() {
     cargarAvaluos();
   } catch (e) { document.getElementById('alvVista').insertAdjacentHTML('afterbegin', '<div class="msj err">' + esc(e.message) + '</div>'); btn.disabled = false; }
 }
+
+// =============================================================================
+// REPORTE: ACTIVOS DISPONIBLES PARA LA VENTA (igual al Excel de contabilidad)
+// =============================================================================
+var ACT = null;
+async function cargarActivosVenta(id) {
+  var t = document.getElementById('actTabla');
+  if (!ACT) t.innerHTML = '<tbody><tr><td class="vacio">Cargando…</td></tr></tbody>';
+  try {
+    ACT = await api('/api/bienes/activos-venta' + (id ? '?carga=' + encodeURIComponent(id) : ''));
+    var sel = document.getElementById('actCorte');
+    sel.innerHTML = (ACT.cortes || []).map(function (c) {
+      return '<option value="' + c.CargaId + '"' + (ACT.corte && c.CargaId === ACT.corte.CargaId ? ' selected' : '') + '>' +
+        esc(c.Fecha ? fechaCorta(c.Fecha) : 'Sin fecha') + ' · ' + esc(c.Archivo || '') + '</option>'; }).join('');
+    pintarActivosVenta();
+  } catch (e) { t.innerHTML = '<tbody><tr><td class="vacio">' + esc(e.message) + '</td></tr></tbody>'; }
+}
+function actFechaLarga(iso) {
+  if (!iso) return '';
+  var d = new Date(iso), M = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  return d.getUTCDate() + ' de ' + M[d.getUTCMonth()] + ' de ' + d.getUTCFullYear();
+}
+function actSuma(l, k) { return l.reduce(function (t, a) { return t + (Number(a[k]) || 0); }, 0); }
+function actPdfs(a) {
+  return (a.Avaluos || []).map(function (x) {
+    return '<button type="button" class="av-chip-pdf" title="' + esc(x.Archivo) + '" onclick="abrirPdfAvaluoAct(' + x.Id + ')">PDF</button>'; }).join(' ') ||
+    '<span class="vence">sin avalúo</span>';
+}
+function abrirPdfAvaluoAct(id) {
+  var x = null;
+  (ACT.filas || []).forEach(function (a) { (a.Avaluos || []).forEach(function (v) { if (v.Id === id) x = v; }); });
+  if (x && x.Enlace) window.open(x.Enlace, '_blank', 'noopener'); else descargarArchivo('/api/bienes/avaluos/' + id + '/archivo', 'avaluo.pdf');
+}
+function actFiltradas() {
+  var q = (document.getElementById('actBuscar').value || '').toLowerCase().trim(), f = document.getElementById('actFiltro').value;
+  return (ACT.filas || []).filter(function (a) {
+    if (f === 'nueva' && !a.Nueva) return false;
+    if (f === 'conav' && !(a.Avaluos || []).length) return false;
+    if (f === 'sinav' && (a.Avaluos || []).length) return false;
+    if (!q) return true;
+    return [a.NoFinca, a.CodigoUbic, a.Deudor, a.Ubicacion, a.Detalle, a.Observaciones, a.TipoPropiedad].join(' ').toLowerCase().indexOf(q) !== -1;
+  });
+}
+function pintarActivosVenta() {
+  if (!ACT) return;
+  var res = document.getElementById('actResumen'), t = document.getElementById('actTabla');
+  if (!ACT.filas.length) {
+    res.innerHTML = ''; document.getElementById('actTitulo').innerHTML = '';
+    t.innerHTML = '<tbody><tr><td class="vacio">Todavía no se ha subido ningún Excel de activos disponibles para la venta. Súbelo con el botón "Subir reporte".</td></tr></tbody>'; return;
+  }
+  var L = ACT.filas, ant = ACT.anterior, libros = actSuma(L, 'ValorLibros'), conAv = L.filter(function (a) { return (a.Avaluos || []).length; }).length;
+  var dif = function (n, din) { var s = n > 0 ? '+' : n < 0 ? '−' : ''; return s + (din ? dinero(Math.abs(n)) : Math.abs(n)); };
+  res.innerHTML = '<div class="av-comp act-comp">' +
+    '<div><b>' + L.length + '</b><span>activos para la venta' + (ant ? ' · <strong>' + dif(L.length - ant.total) + '</strong> contra ' + esc(fechaCorta(ant.Fecha)) + ' (' + ant.total + ')' : ' · primer corte') + '</span></div>' +
+    '<div><b>' + dinero(libros) + '</b><span>valor en libros' + (ant ? ' · ' + dif(libros - ant.ValorLibros, true) + ' contra el mes anterior' : '') + '</span></div>' +
+    '<div><b>' + dinero(actSuma(L, 'ValorMercado')) + '</b><span>valor de mercado</span></div>' +
+    '<div><b>' + conAv + ' / ' + L.length + '</b><span>con avalúo (PDF)</span></div>' +
+    (ant ? '<div><b>' + L.filter(function (a) { return a.Nueva; }).length + ' / ' + ACT.salieron.length + '</b><span>entraron / salieron este mes</span></div>' : '') + '</div>';
+  document.getElementById('actTitulo').innerHTML = '<b>Rapi Préstamos, S.A.</b><span>Activos Disponibles para la Venta</span><span>Al ' + esc(actFechaLarga(ACT.corte.Fecha)) + '</span>';
+  var F = actFiltradas();
+  document.getElementById('actCuenta').textContent = F.length + ' de ' + L.length;
+  var n = function (v) { return v == null || v === '' ? '' : money(v); };
+  var cab = '<thead><tr><th rowspan="2">#</th><th rowspan="2">Fecha de adjudicación</th><th rowspan="2" class="n">Días</th><th rowspan="2">No. de finca</th>' +
+    '<th rowspan="2">Avalúo</th><th rowspan="2">Observaciones</th><th rowspan="2">Deudor</th><th rowspan="2">Ubicación</th><th rowspan="2">Detalle de la propiedad</th>' +
+    '<th rowspan="2">m²</th><th rowspan="2">Tipo</th><th colspan="3" class="c">Valor de avalúo</th><th rowspan="2" class="n">Valor de venta rápida</th>' +
+    '<th rowspan="2" class="n">Valor en libros</th><th rowspan="2" class="n">Pérdida por deterioro</th><th rowspan="2" class="n">%</th><th rowspan="2" class="n">Total de provisión</th><th rowspan="2">Política</th></tr>' +
+    '<tr><th class="n">Terreno / auto</th><th class="n">Mejoras</th><th class="n">Valor de mercado</th></tr></thead>';
+  var filas = F.map(function (a) {
+    return '<tr' + (a.Nueva ? ' class="act-nueva"' : '') + '><td>' + esc(a.Orden == null ? '' : a.Orden) + '</td><td>' + esc(a.FechaAdjudicacion || '') + '</td>' +
+      '<td class="n">' + (a.Dias == null ? '' : a.Dias) + '</td>' +
+      '<td style="white-space:nowrap"><b>' + esc(a.NoFinca + (a.CodigoUbic ? '-' + a.CodigoUbic : '')) + '</b>' + (a.Nueva ? '<br><span class="av-forma número">entró este mes</span>' : '') + '</td>' +
+      '<td style="white-space:nowrap">' + actPdfs(a) + '</td>' +
+      '<td class="act-largo">' + esc(a.Observaciones || '') + '</td><td>' + esc(a.Deudor || '') + '</td><td>' + esc(a.Ubicacion || '') + '</td>' +
+      '<td class="act-largo">' + esc(a.Detalle || '') + '</td><td>' + esc(a.Superficie || '') + '</td><td>' + esc(a.TipoPropiedad || '') + '</td>' +
+      '<td class="n">' + n(a.ValorTerreno) + '</td><td class="n">' + n(a.ValorMejoras) + '</td><td class="n">' + n(a.ValorMercado) + '</td>' +
+      '<td class="n">' + n(a.ValorVentaRapida) + '</td><td class="n">' + n(a.ValorLibros) + '</td><td class="n">' + n(a.Deterioro) + '</td>' +
+      '<td class="n">' + (a.Porcentaje == null ? '' : money(a.Porcentaje)) + '</td><td class="n">' + n(a.Provision) + '</td><td>' + esc(a.Politica || '') + '</td></tr>';
+  }).join('');
+  var tot = '<tfoot><tr><td colspan="11"><b>Total' + (F.length !== L.length ? ' (filtrado)' : '') + '</b></td>' +
+    ['ValorTerreno', 'ValorMejoras', 'ValorMercado', 'ValorVentaRapida', 'ValorLibros', 'Deterioro'].map(function (k) { return '<td class="n"><b>' + money(actSuma(F, k)) + '</b></td>'; }).join('') +
+    '<td></td><td class="n"><b>' + money(actSuma(F, 'Provision')) + '</b></td><td></td></tr></tfoot>';
+  t.innerHTML = cab + '<tbody>' + (filas || '<tr><td colspan="20" class="vacio">Nada coincide con la búsqueda.</td></tr>') + '</tbody>' + tot;
+  var sal = document.getElementById('actSalieron');
+  if (ant && ACT.salieron.length) {
+    sal.hidden = false;
+    sal.innerHTML = '<h2>Salieron este mes (' + ACT.salieron.length + ')</h2><p class="ok" style="margin:-4px 0 12px">Estaban en el corte del ' + esc(fechaCorta(ant.Fecha)) + ' y ya no aparecen en este.</p>' +
+      '<div class="desliz"><table class="datos"><thead><tr><th>No. de finca</th><th>Deudor</th><th>Ubicación</th><th class="n">Valor en libros</th><th></th></tr></thead><tbody>' +
+      ACT.salieron.map(function (a) { return '<tr><td><b>' + esc(a.NoFinca + (a.CodigoUbic ? '-' + a.CodigoUbic : '')) + '</b></td><td>' + esc(a.Deudor || '') + '</td><td>' + esc(a.Ubicacion || '') +
+        '</td><td class="n">' + n(a.ValorLibros) + '</td><td>' + (a.Vendida ? '<span class="av-forma número">vendida</span>' : '') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  } else { sal.hidden = true; sal.innerHTML = ''; }
+}
+// Excel con el mismo formato del de contabilidad, más la columna del avalúo (con enlace)
+async function excelActivosVenta() {
+  if (!ACT || !ACT.filas.length) { alert('No hay datos para descargar.'); return; }
+  var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet(String(new Date(ACT.corte.Fecha).getUTCFullYear()));
+  var C = ['#', 'Fecha de Adjudicación', 'Días transcurridos', 'No. de Finca', 'Avalúo (PDF)', 'Observaciones', 'Deudor', 'Ubicación', 'Detalle de la Propiedad', 'm2', 'Tipo',
+    'Terreno/Auto', 'Mejoras', 'Valor de Mercado', 'Valor de Venta Rápida', 'Valor en Libros', 'Valor de pérdida por deterioro', '%', 'Total de Provisión', 'Política'];
+  var anchos = [5, 26, 12, 16, 30, 40, 28, 16, 60, 14, 10, 14, 14, 16, 16, 16, 16, 8, 16, 14];
+  ws.columns = anchos.map(function (w) { return { width: w }; });
+  [['Rapi Préstamos, S.A.', 14], ['Activos Disponibles para la Venta', 13], ['Al ' + actFechaLarga(ACT.corte.Fecha), 12]].forEach(function (x, i) {
+    ws.mergeCells(i + 1, 1, i + 1, C.length); var c = ws.getCell(i + 1, 1); c.value = x[0]; c.font = { bold: true, size: x[1] }; c.alignment = { horizontal: 'center' }; });
+  ws.mergeCells(5, 12, 5, 14); ws.getCell(5, 12).value = 'Valor de Avalúo'; ws.getCell(5, 12).alignment = { horizontal: 'center' };
+  var borde = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+  [5, 6].forEach(function (r) { for (var j = 1; j <= C.length; j++) { var c = ws.getCell(r, j); c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E78' } }; c.border = borde; c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; } });
+  C.forEach(function (t, j) { ws.getCell(6, j + 1).value = t; });
+  ws.getRow(6).height = 32;
+  var fila = 7, money2 = '#,##0.00';
+  ACT.filas.forEach(function (a) {
+    var av = (a.Avaluos || [])[0];
+    var v = [a.Orden, a.FechaAdjudicacion, a.Dias, a.NoFinca + (a.CodigoUbic ? '-' + a.CodigoUbic : ''), av ? (av.Enlace ? { text: av.Archivo, hyperlink: av.Enlace } : av.Archivo) : 'Sin avalúo',
+      a.Observaciones, a.Deudor, a.Ubicacion, a.Detalle, a.Superficie, a.TipoPropiedad, a.ValorTerreno, a.ValorMejoras, a.ValorMercado, a.ValorVentaRapida, a.ValorLibros,
+      a.Deterioro, a.Porcentaje, a.Provision, a.Politica];
+    v.forEach(function (x, j) { var c = ws.getCell(fila, j + 1); c.value = x == null ? null : x; c.border = borde; c.alignment = { vertical: 'top', wrapText: j === 5 || j === 8 };
+      if (j >= 11 && j <= 18) c.numFmt = money2; if (j === 4 && av && av.Enlace) c.font = { color: { argb: 'FF0563C1' }, underline: true }; });
+    if (a.Nueva) ws.getCell(fila, 4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2EFDA' } };
+    fila++;
+  });
+  ws.getCell(fila, 1).value = 'Total'; ws.getCell(fila, 1).font = { bold: true };
+  ['ValorTerreno', 'ValorMejoras', 'ValorMercado', 'ValorVentaRapida', 'ValorLibros', 'Deterioro'].forEach(function (k, i) {
+    var c = ws.getCell(fila, 12 + i); c.value = actSuma(ACT.filas, k); c.numFmt = money2; c.font = { bold: true }; c.border = borde; });
+  var cp = ws.getCell(fila, 19); cp.value = actSuma(ACT.filas, 'Provision'); cp.numFmt = money2; cp.font = { bold: true }; cp.border = borde;
+  ws.views = [{ state: 'frozen', ySplit: 6, xSplit: 4 }];
+  var d = new Date(ACT.corte.Fecha), dd = ('0' + d.getUTCDate()).slice(-2) + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '-' + d.getUTCFullYear();
+  bajarBlob(new Blob([await wb.xlsx.writeBuffer()], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'Activos_disponibles_para_la_venta_al_' + dd + '.xlsx');
+}
+
+// =============================================================================
+// CIERRE POR INACTIVIDAD: si pasan 10 minutos sin usar la página, la sesión se
+// cierra sola. Un minuto antes sale un aviso con el botón "Seguir conectado".
+// La última actividad se comparte entre pestañas (localStorage) y el servidor
+// también corta la sesión por su lado.
+// =============================================================================
+var INACT = { minutos: 10, avisoSeg: 60, ultimaEscritura: 0, intervalo: null };
+function inactUltima() {
+  var v = 0; try { v = +(localStorage.getItem('br_ultima') || 0); } catch (e) { /* sin almacenamiento */ }
+  return v || Date.now();
+}
+function inactMarcar(forzar) {
+  if (!SES || !SES.usuario) return;
+  var ahora = Date.now();
+  if (!forzar && ahora - INACT.ultimaEscritura < 5000) return;
+  INACT.ultimaEscritura = ahora;
+  try { localStorage.setItem('br_ultima', String(ahora)); } catch (e) { /* nada */ }
+  inactOcultarAviso();
+}
+function inactOcultarAviso() { var a = document.getElementById('avisoInact'); if (a) a.hidden = true; }
+function inactAviso(seg) {
+  var a = document.getElementById('avisoInact');
+  if (!a) {
+    a = document.createElement('div'); a.id = 'avisoInact'; a.setAttribute('role', 'alertdialog');
+    a.innerHTML = '<div><b>¿Sigues ahí?</b><span>Por seguridad, tu sesión se cierra en <b id="avisoInactSeg"></b> por inactividad.</span></div>' +
+      '<button type="button" class="btn prim">Seguir conectado</button>';
+    a.querySelector('button').addEventListener('click', function () { inactMarcar(true); api('/api/bienes/sesion').catch(function () {}); });
+    document.body.appendChild(a);
+  }
+  document.getElementById('avisoInactSeg').textContent = seg + ' s';
+  a.hidden = false;
+}
+async function inactCerrar() {
+  inactOcultarAviso();
+  if (typeof ED !== 'undefined' && ED) ED.sucio = false;
+  try { localStorage.removeItem('br_ultima'); } catch (e) { /* nada */ }
+  await salir();
+  mostrarAcceso('entrar', 'Se cerró tu sesión por ' + INACT.minutos + ' minutos sin actividad. Entra otra vez con tu usuario y contraseña.');
+}
+function inactRevisar() {
+  if (!SES || !SES.usuario) { inactOcultarAviso(); return; }
+  var resto = INACT.minutos * 60000 - (Date.now() - inactUltima());
+  if (resto <= 0) inactCerrar();
+  else if (resto <= INACT.avisoSeg * 1000) inactAviso(Math.ceil(resto / 1000));
+  else inactOcultarAviso();
+}
+['mousedown', 'mousemove', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(function (ev) {
+  window.addEventListener(ev, function () { inactMarcar(false); }, { passive: true, capture: true });
+});
+window.addEventListener('storage', function (e) { if (e.key === 'br_ultima') inactRevisar(); });
+document.addEventListener('visibilitychange', function () { if (!document.hidden) inactRevisar(); });
+INACT.intervalo = setInterval(inactRevisar, 1000);
+// Al entrar se arranca el reloj; si la sesión se venció mientras la página estaba cerrada, se avisa
+var _entrarAppInact = entrarApp;
+entrarApp = function () { inactMarcar(true); return _entrarAppInact.apply(this, arguments); };
+var _mostrarAccesoInact = mostrarAcceso;
+mostrarAcceso = function (modo, mensaje) {
+  if (modo === 'entrar' && !mensaje && ((SES && SES.inactividad) || window.BR_INACTIVO)) {
+    mensaje = 'Se cerró tu sesión por ' + INACT.minutos + ' minutos sin actividad. Entra otra vez con tu usuario y contraseña.';
+    if (SES) SES.inactividad = false; window.BR_INACTIVO = false;
+  }
+  return _mostrarAccesoInact.apply(this, arguments.length ? [modo, mensaje] : arguments);
+};
 </script>
 
 <!-- ================= MI CONTRASEÑA ================= -->

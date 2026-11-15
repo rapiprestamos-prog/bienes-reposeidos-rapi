@@ -25,6 +25,7 @@ var HOJA_ID = '1MuDMY4d0KZqGwjBGW0g90J7r_qXS2hxhR6V_5C9_3PI';   // hoja "Bienes 
 var ZONA = 'America/Panama';
 
 var HORAS_SESION = 8;          // la sesión vence sola a las 8 horas
+var MINUTOS_INACTIVIDAD = 10;  // y se cierra sola si pasan 10 minutos sin usar la página
 var MAX_INTENTOS = 5;          // contraseñas malas seguidas antes de bloquear
 var MINUTOS_BLOQUEO = 15;      // tiempo de bloqueo del usuario
 var MIN_LARGO_CLAVE = 8;
@@ -655,7 +656,9 @@ function despachar_(metodo, ruta, query, body, token) {
     var ctx = { params: params, query: query, body: body, token: token, br: null };
     if (r.acceso) {
       var u = usuarioDeSesion_(token);
-      if (!u) return { success: false, status: 401, sinSesion: true, error: 'Tu sesión terminó. Entra otra vez con tu usuario y contraseña.' };
+      if (!u) return { success: false, status: 401, sinSesion: true, inactividad: RAZON_SIN_SESION_ === 'inactividad',
+        error: RAZON_SIN_SESION_ === 'inactividad' ? 'Se cerró tu sesión por ' + MINUTOS_INACTIVIDAD + ' minutos sin actividad. Entra otra vez con tu usuario y contraseña.'
+          : 'Tu sesión terminó. Entra otra vez con tu usuario y contraseña.' };
       if (u.DebeCambiar) return { success: false, status: 403, debeCambiar: true, error: 'Antes de seguir, cambia tu contraseña.' };
       var roles = r.acceso === 'admin' ? ['ADMIN'] : r.acceso === 'gestor' ? ['ADMIN', 'GESTOR'] : null;
       if (roles && roles.indexOf(u.Rol) === -1) return { success: false, status: 403, error: 'Tu usuario no tiene permiso para esto.' };
@@ -698,8 +701,16 @@ function b64u_(s) { return Utilities.base64EncodeWebSafe(s, Utilities.Charset.UT
 function firma_(cuerpo) { return Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(cuerpo, secreto_())).replace(/=+$/, ''); }
 function firmarSesion_(u) {
   var cuerpo = b64u_(JSON.stringify({ u: u.Id, v: u.SesionVersion, exp: Date.now() + HORAS_SESION * 3600000 }));
-  return cuerpo + '.' + firma_(cuerpo);
+  var token = cuerpo + '.' + firma_(cuerpo);
+  marcarActividad_(token);
+  return token;
 }
+// ---- cierre por inactividad: la sesión muere si pasan MINUTOS_INACTIVIDAD sin ninguna llamada ----
+var RAZON_SIN_SESION_ = null;
+function claveActividad_(token) { return 'act_' + sha_(String(token)).slice(0, 40); }
+function marcarActividad_(token) { try { CacheService.getScriptCache().put(claveActividad_(token), '1', MINUTOS_INACTIVIDAD * 60); } catch (e) { /* sin caché no se corta */ } }
+function sesionActiva_(token) { try { return CacheService.getScriptCache().get(claveActividad_(token)) === '1'; } catch (e) { return true; } }
+function olvidarSesion_(token) { try { if (token) CacheService.getScriptCache().remove(claveActividad_(token)); } catch (e) { /* nada */ } }
 function leerSesion_(token) {
   if (!token || typeof token !== 'string') return null;
   var p = token.split('.'); if (p.length !== 2) return null;
@@ -711,9 +722,12 @@ function leerSesion_(token) {
   } catch (e) { return null; }
 }
 function usuarioDeSesion_(token) {
+  RAZON_SIN_SESION_ = null;
   var t = leerSesion_(token); if (!t) return null;
+  if (!sesionActiva_(token)) { RAZON_SIN_SESION_ = 'inactividad'; return null; }
   var u = T_('BR_Usuario').filter(function (x) { return x.Id === t.u; })[0];
   if (!u || !u.Activo || u.SesionVersion !== t.v) return null;
+  marcarActividad_(token);
   return u;
 }
 function hayAdmin_() { return T_('BR_Usuario').some(function (u) { return u.Rol === 'ADMIN' && u.Activo; }); }
@@ -749,7 +763,7 @@ ruta_('GET', '/api/bienes/diagnostico', null, function () {
 ruta_('GET', '/api/bienes/sesion', null, function (ctx) {
   var instalado = hayAdmin_();
   var u = instalado ? usuarioDeSesion_(ctx.token) : null;
-  return { success: true, instalado: instalado, usuario: publico_(u) };
+  return { success: true, instalado: instalado, usuario: publico_(u), inactividad: !u && RAZON_SIN_SESION_ === 'inactividad' };
 });
 
 // Crear el primer administrador (solo si no hay ningún ADMIN activo)
@@ -808,7 +822,7 @@ ruta_('POST', '/api/bienes/entrar', null, function (ctx) {
   return { success: true, usuario: publico_(u), token: firmarSesion_(u) };
 });
 
-ruta_('POST', '/api/bienes/salir', null, function () { return { success: true, token: '' }; });
+ruta_('POST', '/api/bienes/salir', null, function (ctx) { olvidarSesion_(ctx.token); return { success: true, token: '' }; });
 
 // Cambiar la propia contraseña (también sirve cuando es obligatorio cambiarla)
 ruta_('POST', '/api/bienes/mi-contrasena', null, function (ctx) {
@@ -2525,6 +2539,44 @@ function comparacionAvaluosExcel_(activos) {
   return Object.assign({ anterior: ult ? Object.assign(datosCorte_(ult), { total: antes.total, conAvaluo: antes.conAvaluo }) : null,
     total: ahora.total, conAvaluo: ahora.conAvaluo }, cmp);
 }
+// =============================================================================
+// REPORTE "ACTIVOS DISPONIBLES PARA LA VENTA" (igual al Excel), por corte
+// =============================================================================
+ruta_('GET', '/api/bienes/activos-venta', 'cualquiera', function (ctx) {
+  var cortes = cortesActivos_();
+  if (!cortes.length) return { success: true, cortes: [], filas: [], salieron: [] };
+  var pedido = Number((ctx.query || {}).carga) || 0, i = cortes.length - 1;
+  for (var k = 0; k < cortes.length; k++) if (cortes[k].Id === pedido) i = k;
+  var c = cortes[i], ant = i > 0 ? cortes[i - 1] : null;
+  var L = (c.Lectura && c.Lectura.activos) || [], LA = ant ? ((ant.Lectura && ant.Lectura.activos) || []) : [];
+  var avs = avaluosPorFinca_(), U = universoFincas_(), A = {}, B = {};
+  LA.forEach(function (a) { A[a.NoFinca] = a; }); L.forEach(function (a) { B[a.NoFinca] = 1; });
+  var filas = L.map(function (a) {
+    return Object.assign({}, a, { Nueva: !!ant && !A[a.NoFinca],
+      Avaluos: (avs[a.NoFinca] || []).map(function (x) { return { Id: x.Id, Archivo: x.Archivo, Enlace: x.Enlace || null, TieneArchivo: x.TieneArchivo }; }) });
+  });
+  var salieron = LA.filter(function (a) { return !B[a.NoFinca]; }).map(function (a) {
+    var u = U[a.NoFinca];
+    return { NoFinca: a.NoFinca, CodigoUbic: a.CodigoUbic, Deudor: a.Deudor, Ubicacion: a.Ubicacion, ValorLibros: a.ValorLibros, Vendida: !!(u && (u.Vendida || u.Estado === 'VENDIDA')) };
+  });
+  var suma = function (l, k) { return l.reduce(function (t, a) { return t + (Number(a[k]) || 0); }, 0); };
+  return { success: true, cortes: cortes.map(datosCorte_).reverse(), corte: datosCorte_(c), pie: (c.Lectura && c.Lectura.pie) || null,
+    anterior: ant ? Object.assign(datosCorte_(ant), { total: LA.length, ValorLibros: suma(LA, 'ValorLibros'), ValorMercado: suma(LA, 'ValorMercado') }) : null,
+    filas: filas, salieron: salieron };
+});
+// Completa columnas que antes no se guardaban (%, Política) leyendo otra vez el Excel original de un corte
+ruta_('POST', '/api/bienes/cargas/:id/completar-lectura', 'admin', function (ctx) {
+  var c = T_('BR_Carga').filter(function (x) { return x.Id === Number(ctx.params.id); })[0];
+  if (!c || !c.Lectura || !c.Lectura.activos) throw err_('No existe ese corte de activos.', 404);
+  var nuevos = {}; ((ctx.body || {}).activos || []).forEach(function (a) { if (a && a.NoFinca) nuevos[a.NoFinca] = a; });
+  var n = 0, L = c.Lectura.activos.map(function (a) {
+    var x = nuevos[a.NoFinca]; if (!x) return a; n++;
+    return Object.assign({}, a, { Porcentaje: x.Porcentaje == null ? null : Number(x.Porcentaje), Politica: x.Politica ? String(x.Politica).slice(0, 100) : null });
+  });
+  upd_('BR_Carga', c, { Lectura: Object.assign({}, c.Lectura, { activos: L }) });
+  bitacora_(ctx, 'COMPLETAR_LECTURA', 'Carga #' + c.Id + ': % y política en ' + n + ' activos');
+  return { success: true, actualizados: n };
+});
 ruta_('GET', '/api/bienes/avaluos/historial', 'cualquiera', function () {
   return { success: true, cortes: historialAvaluos_() };
 });
