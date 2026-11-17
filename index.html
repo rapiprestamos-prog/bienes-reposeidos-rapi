@@ -1508,6 +1508,13 @@ body.sin-sesion #vistaActivos { display: none !important; }
 #vistaActivos input[type=search], #vistaActivos select { font:inherit; font-size:.9rem; padding:6px 9px; border:1px solid var(--linea); border-radius:var(--radio-chico); background:#fff; }
 #vistaActivos input[type=search]:focus, #vistaActivos select:focus { outline:none; border-color:var(--acento); box-shadow:0 0 0 3px rgba(18,54,91,.18); }
 .act-tabla td:last-child { white-space:nowrap; }
+/* ---- aviso "Actualizando…" ---- */
+#brOcupado { position:fixed; top:12px; left:50%; transform:translate(-50%,-8px); z-index:10000; display:flex; align-items:center; gap:8px;
+  background:#12365b; color:#fff; font-size:.85rem; font-weight:600; padding:7px 14px; border-radius:999px; box-shadow:0 6px 20px rgba(0,0,0,.25);
+  opacity:0; pointer-events:none; transition:opacity .15s, transform .15s; }
+#brOcupado.ver { opacity:1; transform:translate(-50%,0); }
+#brOcupado i { width:12px; height:12px; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; border-radius:50%; animation:brGira .7s linear infinite; }
+@keyframes brGira { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body class="sin-sesion" data-vista="cuadro">
@@ -3687,9 +3694,24 @@ async function construirExcel(ExcelJS, d, cargas, extra) {
     }
     return respuestaJson(j);
   }
+  // Aviso "Actualizando…" mientras el servidor responde (Apps Script tarda unos segundos)
+  var pendientes = 0, temporizador = null;
+  function aviso(mas) {
+    pendientes = Math.max(0, pendientes + mas);
+    var el = document.getElementById('brOcupado');
+    if (!el && document.body) { el = document.createElement('div'); el.id = 'brOcupado'; el.setAttribute('role', 'status');
+      el.innerHTML = '<i></i>Actualizando…'; document.body.appendChild(el); }
+    if (!el) return;
+    clearTimeout(temporizador);
+    if (pendientes) temporizador = setTimeout(function () { el.classList.add('ver'); }, 250);
+    else el.classList.remove('ver');
+  }
   window.fetch = function (url, opt) {
     var u = typeof url === 'string' ? url : (url && url.url) || '';
-    if (/^(https?:\/\/[^/]+)?\/api\/bienes(\/|$|\?)/.test(u) && u.indexOf(location.origin + '/api/') !== -1 || /^\/api\/bienes/.test(u)) return atender(u, opt || {});
+    if (/^(https?:\/\/[^/]+)?\/api\/bienes(\/|$|\?)/.test(u) && u.indexOf(location.origin + '/api/') !== -1 || /^\/api\/bienes/.test(u)) {
+      aviso(1);
+      return atender(u, opt || {}).then(function (r) { aviso(-1); return r; }, function (e) { aviso(-1); throw e; });
+    }
     return fetchOriginal(url, opt);
   };
 })();
@@ -4391,9 +4413,11 @@ async function anular(id) {
   try {
     await api('/api/bienes/cargas/' + id + '/anular', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: '{}' });
+    CARGAS.forEach(function (x) { if (x.Id === id) x.Anulada = true; });
+    try { pintarPestanas(); pintarHoja(); } catch (e) { /* se repinta al recargar */ }
     toast('Carga #' + id + ' anulada');
     if (VISTA.reporte === id || VISTA.traza === id) VISTA = { reporte: null, traza: null };
-    cargarTodo();
+    await cargarTodo();
   } catch (e) { alert(e.message); }
 }
 
@@ -6388,9 +6412,11 @@ async function eliminarCarga(id) {
   if (!t || t.trim().toUpperCase() !== 'ELIMINAR') { toast('No se eliminó nada'); return; }
   try {
     await api('/api/bienes/cargas/' + id + '/eliminar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    CARGAS = CARGAS.filter(function (x) { return x.Id !== id; });
+    try { pintarPestanas(); pintarHoja(); } catch (e) { /* se repinta al recargar */ }
     toast('Carga #' + id + ' eliminada');
     if (VISTA.reporte === id || VISTA.traza === id) VISTA = { reporte: null, traza: null, fecha: null };
-    cargarTodo();
+    await cargarTodo();
   } catch (e) { alert(e.message); }
 }
 
