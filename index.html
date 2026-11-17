@@ -902,6 +902,124 @@ body.sin-sesion #vistaActivos { display: none !important; }
 #vistaActivos input[type=search] { border-radius:999px; padding-left:16px; }
 #vistaActivos input[type=search]:focus, #vistaActivos select:focus { outline:none; border-color:#0071e3; box-shadow:0 0 0 3px rgba(0,113,227,.18); }
 .act-tabla td:last-child { white-space:nowrap; }
+/* =====================================================================
+   ESTILO POWER BI: lienzo gris claro, visuales blancos con sombra suave,
+   títulos sobrios, segmentadores a la izquierda y tarjetas KPI.
+   Solo apariencia: no cambia ningún dato ni función.
+   ===================================================================== */
+:root {
+  --fondo: #f3f2f1; --papel: #ffffff; --tinta: #252423; --tenue: #605e5c; --linea: #e1dfdd; --celda: #faf9f8;
+  --azul: #12365b; --acento: #118dff; --acento-suave: #e6f2ff;
+  --radio: 10px; --radio-chico: 6px;
+  --sombra: 0 1.6px 3.6px rgba(0,0,0,.09), 0 .3px .9px rgba(0,0,0,.07);
+  --sombra-hover: 0 6.4px 14.4px rgba(0,0,0,.12), 0 1.2px 3.6px rgba(0,0,0,.09);
+}
+body { font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0; background: var(--fondo); color: var(--tinta); }
+
+/* barra superior: azul de la marca, sólida */
+.barra { background: #0f2c4b; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 rgba(255,255,255,.06), 0 2px 8px rgba(0,0,0,.18); }
+.barra h1 { font-weight: 600; letter-spacing: 0; }
+.barra h1::before { border-radius: 5px; }
+
+/* menú de secciones: pestañas planas con subrayado */
+.vistas { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: 1px solid var(--linea);
+  box-shadow: 0 1px 3px rgba(0,0,0,.05); justify-content: flex-start; padding: 0 22px; gap: 2px; }
+.vistas button { border-radius: 0; padding: 12px 14px 10px; color: var(--tenue); opacity: 1; font-weight: 600; font-size: .88rem;
+  border-bottom: 3px solid transparent; background: transparent; transition: color .15s, border-color .15s, background .15s; }
+.vistas button:hover { color: var(--tinta); background: #faf9f8; }
+.vistas button[aria-current="page"] { color: var(--azul); background: transparent; box-shadow: none; border-bottom-color: var(--acento); }
+
+/* visuales (paneles) */
+.panel, .hoja, .barra-corte, .cuadro, .tarjeta-acceso, .ed-cab, .gr-panel { border: 1px solid #edebe9 !important; border-radius: var(--radio);
+  box-shadow: var(--sombra); background: var(--papel); }
+.panel h2, .tablero h2 { font-size: 1rem; font-weight: 600; letter-spacing: 0; color: var(--tinta); }
+.btn { border-radius: var(--radio-chico); font-weight: 600; }
+.btn.prim { background: var(--acento); }
+.btn.prim:hover:not(:disabled) { background: #0f7ae0; }
+.barra .btn { border-radius: var(--radio-chico); }
+
+/* tarjetas (todas las secciones): una tarjeta por indicador con franja de color */
+.tarjetas-g { gap: 12px; background: transparent; border: 0 !important; box-shadow: none !important; overflow: visible; }
+.tarjetas-g > div { background: var(--papel); border: 1px solid #edebe9 !important; border-radius: var(--radio); box-shadow: var(--sombra);
+  border-top: 3px solid var(--k, var(--acento)) !important; transition: box-shadow .15s, transform .15s; }
+.tarjetas-g > div:nth-child(6n+2) { --k: #00b0f0; } .tarjetas-g > div:nth-child(6n+3) { --k: #1aab40; }
+.tarjetas-g > div:nth-child(6n+4) { --k: #e66c37; } .tarjetas-g > div:nth-child(6n+5) { --k: #744ec2; } .tarjetas-g > div:nth-child(6n) { --k: #d64550; }
+.tarjetas-g > div:nth-child(6n+1) { --k: #12365b; }
+.tarjetas-g.clic div:hover { background: var(--papel); box-shadow: var(--sombra-hover); transform: translateY(-1px); }
+.tarjetas-g div.activa { box-shadow: 0 0 0 2px var(--acento), var(--sombra); }
+.tarjetas-g b { font-weight: 600; letter-spacing: 0; color: var(--tinta); }
+
+/* tarjetas KPI de las gráficas */
+.tarjetas-g.kpis { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.tarjetas-g.kpis > .kpi { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px 12px; position: relative; min-height: 112px; }
+.kpi .kpi-t { font-size: .78rem; font-weight: 600; color: var(--tenue); text-transform: uppercase; letter-spacing: .03em; }
+.kpi > b { font-size: 1.6rem !important; line-height: 1.2; margin: 2px 0; white-space: normal; overflow-wrap: anywhere; }
+.kpi > b:has(.neg), .kpi > b:has(.pos) { font-size: 1.3rem !important; }
+.kpi .kpi-s { font-size: .8rem; color: var(--tenue); }
+.kpi .kpi-d { display: inline-block; margin-top: 4px; font-size: .76rem; font-weight: 600; padding: 1px 8px; border-radius: 10px; align-self: flex-start; }
+.kpi .kpi-d.sube { background: #dff6dd; color: #107c10; } .kpi .kpi-d.baja { background: #fde7e9; color: #a4262c; }
+.kpi .kpi-d.igual { background: #f3f2f1; color: var(--tenue); }
+.kpi .kpi-spark { display: block; width: 100%; height: 30px; margin-top: 8px; }
+
+/* gráficas gerenciales: segmentadores a la izquierda, visuales a la derecha */
+body[data-vista="graficas"]:not(.sin-sesion) #vistaGraficas { display: grid; grid-template-columns: 236px minmax(0, 1fr); column-gap: 20px; align-items: start; }
+#vistaGraficas > * { grid-column: 2; min-width: 0; }
+#vistaGraficas > .gr-filtros { grid-column: 1; grid-row: 1 / span 40; position: sticky; top: 118px; flex-direction: column; align-items: stretch; gap: 14px;
+  padding: 16px; margin: 0; border: 1px solid #edebe9; border-radius: var(--radio); box-shadow: var(--sombra); max-height: calc(100vh - 136px); overflow: auto; }
+#vistaGraficas > .gr-filtros::before { content: 'Segmentadores'; font-weight: 600; font-size: .95rem; color: var(--tinta); padding-bottom: 8px; border-bottom: 1px solid var(--linea); }
+.gr-filtros label { flex-direction: column; align-items: stretch; gap: 5px; font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; color: var(--tenue); }
+.gr-filtros select, .gr-filtros input { width: 100%; padding: 7px 9px; border: 1px solid #c8c6c4; border-radius: 4px; font-size: .86rem; text-transform: none; letter-spacing: 0; color: var(--tinta); }
+.gr-filtros select:focus, .gr-filtros input:focus { outline: none; border-color: var(--acento); box-shadow: 0 0 0 2px rgba(17,141,255,.2); }
+#grFEstados { display: flex; flex-direction: column; gap: 4px; }
+.gr-chip { display: flex; align-items: center; gap: 8px; text-align: left; border: 1px solid #e1dfdd; background: #fff; border-radius: 4px; padding: 6px 9px;
+  font-size: .84rem; font-weight: 500; color: var(--tinta); text-transform: none; letter-spacing: 0; }
+.gr-chip::before { content: ''; width: 14px; height: 14px; border: 1.5px solid #8a8886; border-radius: 3px; flex: none; background: #fff; }
+.gr-chip.on { color: #fff; }
+.gr-chip.on::before { border-color: #fff; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23252423' stroke-width='2'/%3E%3C/svg%3E") center/12px no-repeat; }
+.gr-chip:hover:not(.on) { background: #faf9f8; }
+.gr-filtros .btn { margin: 4px 0 0; width: 100%; }
+@media (max-width: 1150px) {
+  body[data-vista="graficas"]:not(.sin-sesion) #vistaGraficas { display: block; }
+  #vistaGraficas > .gr-filtros { position: static; flex-direction: row; flex-wrap: wrap; max-height: none; margin-bottom: 12px; }
+  #vistaGraficas > .gr-filtros::before { display: none; }
+  .gr-filtros label { min-width: 150px; }
+  #grFEstados { flex-direction: row; flex-wrap: wrap; }
+}
+
+.gr-cab h2 { font-size: 1.3rem; font-weight: 600; }
+.gr-activos span.f { background: var(--acento-suave); color: #0b5cad; border-radius: 4px; }
+.gr-titulo { font-size: 1.02rem; color: var(--tinta); font-weight: 600; }
+.gr-titulo .n { border-radius: 6px; background: var(--azul); }
+.gr-sistema .gr-titulo .n { background: #8a8886; }
+.gr-rejilla { gap: 16px; }
+.gr-panel { padding: 14px 16px 12px; transition: box-shadow .15s; }
+.gr-panel:hover { box-shadow: var(--sombra-hover); }
+.gr-panel h3 { font-size: .95rem; font-weight: 600; color: var(--tinta); }
+.gr-panel .gr-sub { font-size: .78rem; margin-bottom: 8px; }
+.gr-herr { border-bottom: 1px solid #f3f2f1; padding-bottom: 8px; margin-bottom: 6px; font-size: .76rem; }
+.gr-herr select, .gr-herr input.gr-meta { border: 1px solid #e1dfdd; border-radius: 4px; padding: 3px 6px; background: #fff; font: inherit; font-size: .78rem; }
+.gr-herr input.gr-meta { width: 130px; text-align: right; }
+.gr-herr button { border-radius: 4px; border-color: #e1dfdd; color: var(--tinta); }
+.gr-ec { width: 100%; }
+.gr-dona { grid-template-columns: minmax(200px, 250px) 1fr; }
+.gr-dona td.gr-pc { position: relative; min-width: 74px; }
+.gr-dona td.gr-pc span { display: inline-block; width: 34px; height: 6px; border-radius: 3px; margin-right: 6px; vertical-align: middle;
+  background: linear-gradient(90deg, var(--c) var(--p), #edebe9 var(--p)); }
+.gr-leyenda button { border-radius: 4px; font-size: .78rem; }
+.gr-montos td.m { font-variant-numeric: tabular-nums; }
+.gr-montos tr.gr-total td { font-weight: 600; background: #faf9f8; }
+.gr-det summary { font-size: .8rem; color: #0b5cad; cursor: pointer; margin-top: 6px; }
+
+/* tablas: encabezado gris, filas con hover suave */
+table.datos th, .tb-tabla th { background: #faf9f8; color: var(--tenue); font-size: .76rem; font-weight: 600; }
+table.datos tbody tr:hover td, .tb-tabla tbody tr:hover td { background: #f3f9ff; }
+
+/* ventanas */
+dialog { border-radius: 12px !important; }
+.av-tarjetas button { border-radius: var(--radio); border: 1px solid #edebe9; }
+.av-comp > div { border-radius: var(--radio); }
+@media print { body[data-vista="graficas"] #vistaGraficas { display: block !important; } .kpi .kpi-spark { display: none; } }
 </style>
 </head>
 <body class="sin-sesion" data-vista="cuadro">
@@ -1310,7 +1428,7 @@ body.sin-sesion #vistaActivos { display: none !important; }
     <button class="btn sec" type="button" onclick="grLimpiar()">Limpiar filtros</button>
   </div>
   <div class="gr-activos" id="grActivos"></div>
-  <div class="tarjetas-g" id="grTarjetas"></div>
+  <div class="tarjetas-g kpis" id="grTarjetas"></div>
 
   <section class="gr-bloque">
     <h2 class="gr-titulo"><span class="n">1</span>Cartera de activos</h2>
@@ -1640,6 +1758,8 @@ body.sin-sesion #vistaActivos { display: none !important; }
 <div class="toast" id="toast" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<!-- Gráficas estilo Power BI (si no carga, la página usa sus dibujos SVG de siempre) -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 <script>
 
 // =============================================================================
@@ -6610,10 +6730,10 @@ window.addEventListener('resize', fxCerrar);
 var GR = null;             // { inv, gest, cont, ventas, ejecutivoDe }
 var GR_ULT = {};           // últimos datos pintados por gráfica (para clic y leyenda)
 var GR_LISTO = false;      // tooltip ya conectado
-var GR_COLORES = ['#12365b', '#00b0f0', '#00b050', '#f5a623', '#7c5cff', '#c13584', '#f28c00', '#1877f2', '#25d366', '#6b7785', '#b42318', '#0a7cff'];
+var GR_COLORES = ['#118dff', '#12239e', '#e66c37', '#6b007b', '#e044a7', '#744ec2', '#d9b300', '#d64550', '#197278', '#1aab40', '#15c6f4', '#4092ff'];
 var GR_MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 var GR_NIVEL = { ALTA: { t: 'Alta', c: '#00b050' }, MEDIA: { t: 'Media', c: '#f5a623' }, BAJA: { t: 'Baja', c: '#9aa5b1' } };
-var GR_TIPOS = { barras: 'Barras', columnas: 'Columnas', linea: 'Línea', dona: 'Dona' };
+var GR_TIPOS = { barras: 'Barras', columnas: 'Columnas', linea: 'Línea', area: 'Área', dona: 'Dona', arbol: 'Mapa de árbol', embudo: 'Embudo' };
 // (estilo solo para los dibujos: cada regla empieza con "svg" para no tocar el resto de la página)
 var GR_ESTILO = '<style>svg text{font-family:"Segoe UI",Arial,sans-serif;font-size:12px;fill:#2a3542}svg .eje{fill:#5c6b7a;font-size:11px}svg .sub{fill:#5c6b7a;font-size:10.5px}' +
   'svg .valor{font-weight:600}svg .grid{stroke:#eef1f4}svg .marca{stroke:#b42318;stroke-dasharray:4 3}svg .activo{stroke:#12365b;stroke-width:2}</style>';
@@ -6670,6 +6790,19 @@ var GR_GRAFICAS = [
             '\nLibros ' + montoCorto(sumaDe(l, 'ValorLibros')) + '\nDeterioro ' + montoCorto(sumaDe(l, 'Deterioro')) + ' · Provisión ' + montoCorto(sumaDe(l, 'Provision')) };
       });
     } },
+  { id: 'grArbol', bloque: 1, ancho: true, fijo: 'arbol', filtro: 'seccion', filtroHijo: 'tipo', titulo: 'Mapa de la cartera',
+    sub: 'Cada sección dividida por tipo de propiedad; el tamaño de cada cuadro es el valor que elijas. Clic en un cuadro para filtrar todo por esa sección o ese tipo.',
+    medidas: [{ k: 'libros', t: 'Valor en libros', fmt: montoCorto }, { k: 'mercado', t: 'Valor de mercado', fmt: montoCorto }, { k: 'n', t: 'Fincas', fmt: String }],
+    datos: function (d) {
+      return GR_SECCIONES.map(function (s) {
+        var l = d.F.filter(function (f) { return grSeccion(f) === s; }), por = {};
+        l.forEach(function (f) { var t = f.TipoPropiedad || 'Sin tipo definido'; (por[t] = por[t] || []).push(f); });
+        var v = { n: l.length, libros: sumaDe(l, 'ValorLibros'), mercado: sumaDe(l, 'ValorMercado') };
+        return { clave: s, etiqueta: s, color: GR_COLOR_SEC[s], v: v,
+          hijos: Object.keys(por).sort().map(function (t) { return { etiqueta: t, v: { n: por[t].length, libros: sumaDe(por[t], 'ValorLibros'), mercado: sumaDe(por[t], 'ValorMercado') } }; }),
+          tip: '<b>' + s + '</b>\n' + v.n + ' fincas\nLibros ' + montoCorto(v.libros) + '\nMercado ' + montoCorto(v.mercado) };
+      });
+    } },
   { id: 'grMarcas', bloque: 1, titulo: 'Marcas y mejoras', sub: 'Letra roja (no se pueden vender), sombreado (póliza de incendio) y columna MEJORAS del Excel de activos.', tipo: 'barras',
     medidas: [{ k: 'n', t: 'Fincas', fmt: String }, { k: 'libros', t: 'Valor en libros', fmt: montoCorto }],
     datos: function (d) {
@@ -6695,6 +6828,27 @@ var GR_GRAFICAS = [
     } },
 
   // ---------- 2. Ventas 2026 (reporte de ventas y hoja "datos de ventas") ----------
+  { id: 'grMedidores', bloque: 2, ancho: true, fijo: 'medidor', meta: true, sinLeyenda: true, titulo: 'Avance de la cartera',
+    sub: 'Qué parte de la cartera ya se vendió, cuánto se recupera sobre el valor en libros, cuánto de lo que queda está en trámite y el avance contra la meta del año (la meta la escribes arriba y se guarda en este navegador).',
+    medidas: [{ k: 'p', t: 'Porcentaje', fmt: function (v) { return v.toFixed(1) + '%'; } }],
+    datos: function (d) {
+      var de = function (e) { return d.F.filter(function (f) { return f.Estado === e; }); };
+      var vend = de('VENDIDA'), tram = de('EN_TRAMITE'), sinV = de('DISPONIBLE').concat(tram);
+      var lib = sumaDe(d.V, 'ValorLibros'), ven = sumaDe(d.V, 'ValorVentaNegociado'), rec = lib ? ven / lib * 100 : 0;
+      var meta = GR_META.ventas, pm = meta ? ven / meta * 100 : 0, redondo = function (n) { return Math.round(n).toLocaleString('en-US'); };
+      return [
+        { clave: 'vendida', etiqueta: 'Cartera vendida', color: '#1aab40', v: { p: d.F.length ? vend.length / d.F.length * 100 : 0 },
+          texto: vend.length + ' de ' + d.F.length + ' fincas', tip: '<b>Cartera vendida</b>\n' + vend.length + ' de ' + d.F.length + ' fincas (Excel de activos)' },
+        { clave: 'recupera', etiqueta: 'Venta sobre valor en libros', color: '#118dff', max: Math.max(120, Math.ceil(rec / 20) * 20), v: { p: rec },
+          texto: d.V.length + (d.V.length === 1 ? ' venta' : ' ventas') + ' del reporte',
+          tip: '<b>Venta sobre valor en libros</b>\nVenta negociada ' + montoCorto(ven) + '\nValor en libros ' + montoCorto(lib) + '\n100% = se vendió a valor en libros' },
+        { clave: 'tramite', etiqueta: 'Sin vender en trámite', color: '#e66c37', v: { p: sinV.length ? tram.length / sinV.length * 100 : 0 },
+          texto: tram.length + ' de ' + sinV.length + ' sin vender', tip: '<b>En trámite de venta</b>\n' + tram.length + ' de ' + sinV.length + ' fincas disponibles o en trámite' },
+        { clave: 'meta', etiqueta: 'Meta de ventas del año', color: '#744ec2', max: Math.max(100, Math.ceil(pm / 20) * 20), v: { p: pm },
+          texto: meta ? 'meta B/. ' + redondo(meta) : 'escribe la meta arriba',
+          tip: '<b>Meta de ventas del año</b>\n' + (meta ? 'Vendido ' + montoCorto(ven) + ' de ' + montoCorto(meta) : 'Todavía no hay meta: escríbela en la barra de esta gráfica.') }
+      ];
+    } },
   { id: 'grVentas2026', bloque: 2, titulo: 'Vendidas y en proceso', sub: 'Venta negociada contra valor en libros (tablas Venta finalizada y Ventas en proceso).', tipo: 'columnas',
     series: [{ k: 'libros', t: 'Valor en libros', color: '#6b7785', fmt: montoCorto }, { k: 'venta', t: 'Venta negociada', color: '#00b050', fmt: montoCorto }],
     datos: function (d) {
@@ -6761,6 +6915,26 @@ var GR_GRAFICAS = [
           tip: '<b>' + x[1] + '</b> · venta ' + montoCorto(ven) + '\nFinanciado ' + montoCorto(v.fin) + pc(v.fin) + '\nAbono ' + montoCorto(v.abono) + pc(v.abono) +
             '\nContado ' + montoCorto(v.contado) + pc(v.contado) };
       });
+    } },
+  { id: 'grCascada', bloque: 3, ancho: true, fijo: 'cascada', sinLeyenda: true, titulo: 'De la venta al balance',
+    sub: 'Venta negociada de lo vendido, menos el valor en libros y cada gasto, hasta llegar al balance (trazabilidad, ventas finalizadas).',
+    medidas: [{ k: 'm', t: 'Monto', fmt: montoCorto }],
+    datos: function (d) {
+      var vend = d.T.filter(function (t) { return t.Grupo === 'VENDIDA'; });
+      if (!vend.length) return [];
+      var venta = sumaDe(vend, 'ValorVentaNegociado'), libros = sumaDe(vend, 'ValorLibros'), bal = sumaDe(vend, 'Balance'), resto = venta - libros;
+      var out = [{ clave: 'venta', etiqueta: 'Venta negociada', total: true, color: '#12365b', v: { m: venta }, tip: '<b>Venta negociada</b>\n' + montoCorto(venta) + ' en ' + vend.length + ' fincas vendidas' },
+        { clave: 'libros', etiqueta: 'Valor en libros', color: '#8a8886', v: { m: -libros }, tip: '<b>Valor en libros</b>\n− ' + montoCorto(libros) }];
+      [['ImpuestoInmueble', 'Impuesto de inmueble'], ['GastoMantenimiento', 'Mantenimiento'], ['GastosLegales', 'Gastos legales'], ['Impuesto2', 'Impuesto 2%'],
+        ['Impuesto3', 'Impuesto 3%'], ['Comision', 'Comisión']].forEach(function (x) {
+        var m = sumaDe(vend, x[0]);
+        if (m) { out.push({ clave: x[0], etiqueta: x[1], v: { m: -m }, tip: '<b>' + x[1] + '</b>\n− ' + montoCorto(m) }); resto -= m; }
+      });
+      var otros = resto - bal;
+      if (Math.abs(otros) >= 0.01) out.push({ clave: 'otros', etiqueta: 'Otros / ajuste', color: '#c8c6c4', v: { m: -otros },
+        tip: '<b>Otros / ajuste</b>\n' + montoCorto(-otros) + '\nDiferencia entre los pasos y la columna Balance de la trazabilidad' });
+      out.push({ clave: 'balance', etiqueta: 'Balance', total: true, color: bal >= 0 ? '#1aab40' : '#b42318', v: { m: bal }, tip: '<b>Balance de lo vendido</b>\n' + montoCorto(bal) });
+      return out;
     } },
   { id: 'grBalance', bloque: 3, ancho: true, titulo: 'Balance por finca', sub: 'Columna Balance de la trazabilidad: venta negociada − valor en libros − total de gastos. Clic en una finca para filtrar todo.', tipo: 'columnas', filtro: 'finca', orden: true, top: 0,
     marca: { valor: 0, texto: 'Sin pérdida ni ganancia' },
@@ -6841,6 +7015,18 @@ var GR_GRAFICAS = [
           tip: '<b>' + esc(nfv(f.NoFinca)) + '</b> · ' + (EST_FINCA[f.Estado] || f.Estado) + (f.Ubicacion ? '\n' + esc(f.Ubicacion) : '') + '\n' + v.visitas + ' visitas · ' + v.publicaciones + ' publicaciones · ' +
             v.consultas + ' consultas · ' + v.contactos + ' contactos' + (f.UltimaVisita ? '\nÚltima visita ' + fechaCorta(f.UltimaVisita) : '') };
       }).filter(function (it) { return it.v.visitas || it.v.consultas || it.v.contactos || it.v.publicaciones; });
+    } },
+  { id: 'grEmbudo', bloque: 6, fijo: 'embudo', filtro: 'estados', sinLeyenda: true, titulo: 'Embudo de venta',
+    sub: 'Disponibles → con oferta abierta → en trámite → vendidas, igual que en el Dashboard. Clic en un paso para filtrar por ese estatus.',
+    medidas: [{ k: 'n', t: 'Fincas', fmt: String }, { k: 'm', t: 'Monto', fmt: montoCorto }],
+    datos: function (d) {
+      var de = function (e) { return d.F.filter(function (f) { return f.Estado === e; }); };
+      var disp = de('DISPONIBLE'), tram = de('EN_TRAMITE'), vend = de('VENDIDA');
+      var oferta = d.F.filter(function (f) { return f.Estado !== 'VENDIDA' && f.UltimaOferta != null && (f.UltimaOfertaEstado === 'EN_EVALUACION' || f.UltimaOfertaEstado === 'CONTRAOFERTA'); });
+      var paso = function (clave, t, color, l, campo, txt) { var m = sumaDe(l, campo);
+        return { clave: clave, etiqueta: t, color: color, v: { n: l.length, m: m }, tip: '<b>' + t + '</b>\n' + l.length + ' fincas · ' + montoCorto(m) + ' ' + txt }; };
+      return [paso('DISPONIBLE', 'Disponibles', COLOR_EST.DISPONIBLE, disp, 'ValorLibros', 'en libros'), paso(null, 'Con oferta abierta', '#7c5cff', oferta, 'UltimaOferta', 'ofrecido'),
+        paso('EN_TRAMITE', 'En trámite de venta', COLOR_EST.EN_TRAMITE, tram, 'ValorVenta', 'negociado'), paso('VENDIDA', 'Vendidas', COLOR_EST.VENDIDA, vend, 'ValorVenta', 'vendido')];
     } },
   { id: 'grVisitasMes', bloque: 6, titulo: 'Actividad por mes', sub: 'Últimos 12 meses hasta la fecha de la vista. Clic en un mes para filtrar todo.', tipo: 'columnas', filtro: 'mes', sinLeyenda: true,
     medidas: [{ k: 'visitas', t: 'Visitas a la propiedad', fmt: String }, { k: 'gestiones', t: 'Gestiones de campo', fmt: String }, { k: 'contactos', t: 'Contactos de redes', fmt: String }, { k: 'consultas', t: 'Consultas en publicaciones', fmt: String }],
@@ -6947,6 +7133,9 @@ async function cargarGraficas() {
     grPrepararFiltros();
     grPintarPesos();
     grPintarTodo();
+    // tarjeta de "Activos para la venta" (contabilidad) con la comparación contra el corte anterior; si falla, no se muestra
+    api('/api/bienes/activos-venta').then(function (r) { if (GR && r && r.success) { GR.act = r; if (GR_ULT._datos) grPintarTarjetas(GR_ULT._datos); } })
+      .catch(function () { /* sin tarjeta de contabilidad */ });
   } catch (e) {
     document.getElementById('grFecha').textContent = '';
     document.getElementById('grTarjetas').innerHTML = '<div class="vacio" style="grid-column:1/-1">' + esc(e.message) + '</div>';
@@ -7110,16 +7299,7 @@ function grPintarTodo() {
   });
 
   // tarjetas
-  var vend = d.F.filter(function (f) { return f.Estado === 'VENDIDA'; }), conUtil = vend.filter(function (f) { return f.Utilidad != null; });
-  var t = function (n, txt) { return '<div><b>' + n + '</b><span>' + txt + '</span></div>'; };
-  var paraVenta = d.F.filter(function (f) { return f.Estado === 'DISPONIBLE'; }), tv = d.T.filter(function (x) { return x.Grupo === 'VENDIDA'; });
-  document.getElementById('grTarjetas').innerHTML =
-    t(d.F.length, 'total de activos') +
-    t(paraVenta.length, 'para la venta · B/.&nbsp;' + money(sumaDe(paraVenta, 'ValorLibros')) + ' en libros') +
-    t(d.F.filter(function (f) { return f.Estado === 'LEGAL'; }).length, 'en legal') +
-    t(d.V.length, 'vendidas 2026 · B/.&nbsp;' + money(sumaDe(d.V, 'ValorVentaNegociado'))) +
-    t(d.P.length, 'en proceso · B/.&nbsp;' + money(sumaDe(d.P, 'ValorVentaNegociado'))) +
-    t(tv.length ? 'B/.&nbsp;' + money(sumaDe(tv, 'Balance'), true) : '—', 'balance de lo vendido (trazabilidad)');
+  grPintarTarjetas(d);
 
   // Una gráfica que quedaría sola en su fila (sin pareja al lado) ocupa todo el ancho: no quedan huecos
   var porBloque = {};
@@ -7142,6 +7322,34 @@ function grPintarTodo() {
     }
     grPintar(g, d);
   });
+}
+
+// Tarjetas KPI estilo Power BI: color, valor grande, comparación y línea de tendencia
+function grPintarTarjetas(d) {
+  var de = function (e) { return d.F.filter(function (f) { return f.Estado === e; }); };
+  var paraVenta = de('DISPONIBLE'), legal = de('LEGAL'), tv = d.T.filter(function (x) { return x.Grupo === 'VENDIDA'; });
+  var libV = sumaDe(d.V, 'ValorLibros'), venV = sumaDe(d.V, 'ValorVentaNegociado'), bal = sumaDe(tv, 'Balance');
+  var base = new Date(d.hoy.slice(0, 7) + '-01T00:00:00'), meses = [];
+  for (var k = 11; k >= 0; k--) {
+    var dm = new Date(base.getFullYear(), base.getMonth() - k, 1), clave = dm.getFullYear() + '-' + String(dm.getMonth() + 1).padStart(2, '0');
+    meses.push(d.G.filter(function (x) { return x.Tipo === 'Visita a la propiedad' && String(x.Fecha).slice(0, 7) === clave; }).length);
+  }
+  var visAnio = meses.reduce(function (a, n) { return a + n; }, 0), A = GR && GR.act, contab = '';
+  if (A && A.filas && A.filas.length) {
+    var dif = A.anterior ? A.filas.length - A.anterior.total : null;
+    contab = grKpi('#197278', 'Para la venta (contabilidad)', A.filas.length, 'B/.&nbsp;' + money(sumaDe(A.filas, 'ValorLibros')) + ' en libros',
+      A.anterior ? grDelta(dif, (dif ? Math.abs(dif) : 'igual') + ' contra el corte del ' + fechaCorta(A.anterior.Fecha), true) : '<span class="kpi-d igual">primer corte</span>');
+  }
+  document.getElementById('grTarjetas').innerHTML =
+    grKpi('#12365b', 'Total de activos', d.F.length, 'B/.&nbsp;' + money(sumaDe(d.F, 'ValorLibros')) + ' en libros') +
+    grKpi('#00b0f0', 'Para la venta', paraVenta.length, 'B/.&nbsp;' + money(sumaDe(paraVenta, 'ValorLibros')) + ' en libros') + contab +
+    grKpi('#c00000', 'En legal', legal.length, 'B/.&nbsp;' + money(sumaDe(legal, 'ValorLibros')) + ' en libros') +
+    grKpi('#00b050', 'Vendidas 2026', d.V.length, 'B/.&nbsp;' + money(venV) + ' negociado',
+      libV ? grDelta(venV - libV, Math.abs((venV - libV) / libV * 100).toFixed(1) + '% ' + (venV >= libV ? 'sobre' : 'bajo') + ' libros') : '') +
+    grKpi('#f5a623', 'En proceso de venta', d.P.length, 'B/.&nbsp;' + money(sumaDe(d.P, 'ValorVentaNegociado')) + ' negociado') +
+    grKpi(bal >= 0 ? '#1aab40' : '#b42318', 'Balance de lo vendido', tv.length ? 'B/.&nbsp;' + money(bal, true) : '—', 'trazabilidad · ' + tv.length + ' fincas') +
+    grKpi('#744ec2', 'Visitas este mes', meses[11], visAnio + ' en los últimos 12 meses',
+      grDelta(meses[11] - meses[10], (meses[11] === meses[10] ? 'igual' : Math.abs(meses[11] - meses[10])) + ' contra el mes anterior') + grSpark(meses, '#744ec2'));
 }
 
 function grCfg(g) {
@@ -7167,7 +7375,7 @@ function grToggleLeyenda(id, clave) {
 }
 function grClicItem(id, k) {
   var g = GR_GRAFICAS.filter(function (x) { return x.id === id; })[0], it = GR_ULT[id] && GR_ULT[id][k];
-  if (g && it && g.filtro) grClicFiltro(g.filtro, it.clave);
+  if (g && it && g.filtro && it.clave != null && it.clave !== '') grClicFiltro(g.filtro, it.clave);
 }
 function grDobleClic(id, k) { var it = GR_ULT[id] && GR_ULT[id][k]; if (it && it.nf) abrirFicha(encodeURIComponent(it.nf)); }
 function grActivo(g, it) {
@@ -7196,30 +7404,38 @@ function grPintar(g, d) {
     return '<select onchange="grCambioCfg(\'' + g.id + '\',\'' + campo + '\',this.value)">' + opciones.map(function (o) {
       return '<option value="' + o[0] + '"' + (String(o[0]) === String(valor) ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>';
   };
-  var h = 'Gráfica ' + sel('tipo', Object.keys(GR_TIPOS).map(function (k) { return [k, GR_TIPOS[k]]; }), c.tipo);
+  var h = g.fijo ? '' : 'Gráfica ' + sel('tipo', Object.keys(GR_TIPOS).filter(function (k) { return grUsaEc() || ['area', 'arbol', 'embudo'].indexOf(k) < 0; }).map(function (k) { return [k, GR_TIPOS[k]]; }), c.tipo);
+  if (g.meta) h += 'Meta de ventas del año B/. <input type="text" inputmode="decimal" class="gr-meta" value="' + (GR_META.ventas ? money(GR_META.ventas) : '') + '" placeholder="escríbela aquí" onchange="grCambiarMeta(this.value)">';
   if (g.medidas && g.medidas.length > 1) h += ' Medir ' + sel('medida', g.medidas.map(function (m2) { return [m2.k, m2.t]; }), c.medida);
   if (g.orden) h += ' Top ' + sel('top', [[5, '5'], [10, '10'], [12, '12'], [20, '20'], [0, 'todas']], c.top) +
     ' Orden ' + sel('orden', [['desc', 'mayor a menor'], ['asc', 'menor a mayor'], ['alfa', 'alfabético']], c.orden);
   h += '<span class="der"><button type="button" title="Descargar esta gráfica como imagen PNG" onclick="grDescargar(\'' + g.id + '\')">&#8681; PNG</button></span>';
   document.getElementById('grHerr_' + g.id).innerHTML = h;
 
-  var W = grW(g.id, g.ancho || g._solo), svg;
+  var W = grW(g.id, g.ancho || g._solo), svg, ec = grUsaEc() && items.length && series.length;
   var vacio = '<div class="gr-vacio">' + (g.vacio || 'No hay datos con los filtros actuales.') + '</div>';
   if (!items.length || !series.length) svg = vacio;
+  else if (ec) svg = grEcHtml(g, items, series, c);
+  else if (g.fijo === 'medidor' || g.fijo === 'cascada') svg = grColumnas(g, items, series, W);
   else if (c.tipo === 'dona') svg = grDona(g, items, series[0], c);
   else if (c.tipo === 'columnas') svg = grColumnas(g, items, series, W);
   else if (c.tipo === 'linea') svg = grLinea(g, items, series, W);
   else svg = grBarrasH(g, items, series, W, c);
-  // Montos exactos debajo de las gráficas de barras y columnas (la dona ya trae su tabla)
-  if (items.length && series.length && c.tipo !== 'dona') {
+  // Montos exactos debajo de las gráficas de barras y columnas (la dona ya trae su tabla), con barra de datos en cada celda
+  if (items.length && series.length && grEcTipo(g, c) !== 'dona') {
+    var maxCol = series.map(function (s2) { return items.reduce(function (a, it) { return Math.max(a, Math.abs(num(it.v[s2.k]) || 0)); }, 0); });
     var tabla = '<table class="tb-tabla gr-montos"><thead><tr><th></th>' + series.map(function (s2) { return '<th class="m">' + esc(s2.t) + '</th>'; }).join('') +
       '</tr></thead><tbody>' + items.map(function (it) {
-        return '<tr><td>' + esc(it.etiqueta) + '</td>' + series.map(function (s2) { return '<td class="m">' + esc(grFmt(num(it.v[s2.k]), s2.fmt)) + '</td>'; }).join('') + '</tr>';
+        return '<tr' + (it.total ? ' class="gr-total"' : '') + '><td>' + esc(it.etiqueta) + '</td>' + series.map(function (s2, j) { var v = num(it.v[s2.k]);
+          return '<td class="m"' + (g.fijo === 'medidor' || it.total ? '' : grBarraCelda(v, maxCol[j])) + '>' + esc(grFmt(v, s2.fmt)) + '</td>'; }).join('') + '</tr>';
       }).join('') + '</tbody></table>';
     svg += items.length <= 8 ? '<div class="desliz">' + tabla + '</div>'
       : '<details class="gr-det"><summary>Ver montos (' + items.length + ')</summary><div class="desliz">' + tabla + '</div></details>';
   }
+  var viejo = document.getElementById('grEc_' + g.id);
+  if (viejo && viejo.parentNode) viejo.parentNode.removeChild(viejo);
   document.getElementById(g.id).innerHTML = svg;
+  if (ec) grEcPintar(g, items, series, c, viejo); else grEcLiberar(g.id);
 
   // leyenda con botones para mostrar u ocultar
   var ley = '';
@@ -7362,6 +7578,19 @@ function grDona(g, items, s, c) {
 // Descarga la gráfica como PNG (título + SVG sobre fondo blanco)
 function grDescargar(id) {
   var g = GR_GRAFICAS.filter(function (x) { return x.id === id; })[0], el = document.querySelector('#' + id + ' svg');
+  if (g && GR_EC[id]) {
+    var ch = GR_EC[id], im = new Image(), wE = ch.getWidth(), hE = ch.getHeight();
+    im.onload = function () {
+      var k = 2, cab = 40, cv = document.createElement('canvas'); cv.width = (wE + 20) * k; cv.height = (hE + cab + 16) * k;
+      var x = cv.getContext('2d'); x.scale(k, k); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height);
+      x.fillStyle = '#252423'; x.font = '600 15px "Segoe UI", Arial, sans-serif'; x.fillText(g.titulo, 10, 22);
+      x.fillStyle = '#605e5c'; x.font = '11px "Segoe UI", Arial, sans-serif'; x.fillText(document.getElementById('grFecha').textContent, 10, 36);
+      x.drawImage(im, 10, cab, wE, hE);
+      cv.toBlob(function (b) { bajarBlob(b, g.id.replace(/^gr/, 'Grafica_') + '.png'); }, 'image/png');
+    };
+    im.src = ch.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#fff' });
+    return;
+  }
   if (!g || !el) return;
   var vb = el.viewBox.baseVal, w = vb.width, h = vb.height, copia = el.cloneNode(true);
   copia.setAttribute('width', w); copia.setAttribute('height', h); copia.removeAttribute('style');
@@ -7375,6 +7604,304 @@ function grDescargar(id) {
     cv.toBlob(function (b) { bajarBlob(b, g.id.replace(/^gr/, 'Grafica_') + '.png'); }, 'image/png');
   };
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+}
+
+// =====================================================================
+// GRÁFICAS CON ECHARTS (estilo Power BI)
+// Si la librería no carga (sin internet al CDN), se usan los dibujos SVG de arriba.
+// =====================================================================
+var GR_EC = {};        // instancia de ECharts por gráfica
+var GR_EC_RO = {};     // ResizeObserver por gráfica (se ajusta solo al ancho)
+var GR_EC_FUENTE = '"Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif';
+var GR_EC_TINTA = '#252423', GR_EC_TENUE = '#605e5c', GR_EC_REJILLA = '#edebe9';
+function grUsaEc() { return !!(window.echarts && window.echarts.init); }
+function grEcLiberar(id) {
+  if (GR_EC_RO[id]) { try { GR_EC_RO[id].disconnect(); } catch (e) { /* nada */ } delete GR_EC_RO[id]; }
+  if (GR_EC[id]) { try { GR_EC[id].dispose(); } catch (e) { /* nada */ } delete GR_EC[id]; }
+}
+function grEcTipo(g, c) { return g.fijo || c.tipo; }
+function grEcAlto(g, items, series, tipo) {
+  var ancho = g.ancho || g._solo;
+  if (tipo === 'barras') { var multi = series.length > 1; return Math.max(170, items.length * (multi ? series.length * 15 + 16 : (g.conSub ? 46 : 34)) + 54); }
+  if (tipo === 'medidor') return 250;
+  if (tipo === 'arbol') return ancho ? 400 : 340;
+  if (tipo === 'dona') return 250;
+  if (tipo === 'embudo') return Math.max(260, items.length * 64);
+  return ancho ? 340 : 300;
+}
+// Texto seguro para etiquetas con formato "rich" de ECharts
+function grEcTxt(s) { return String(s == null ? '' : s).replace(/[{}|]/g, ''); }
+// Números del eje: completos, sin decimales (los montos exactos van en la tabla y en el tooltip)
+function grEcEje(s) {
+  return function (v) {
+    if (s.fmt === montoCorto) return Number(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
+    try { return s.fmt(v); } catch (e) { return v; }
+  };
+}
+function grEcTooltip(items) {
+  return { trigger: 'item', confine: true, enterable: false, backgroundColor: 'rgba(37,36,35,.96)', borderWidth: 0, padding: [9, 12],
+    textStyle: { color: '#fff', fontSize: 12, fontFamily: GR_EC_FUENTE },
+    extraCssText: 'border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:380px;white-space:normal;line-height:1.45',
+    formatter: function (p) {
+      var k = p.data && p.data.k != null ? p.data.k : p.dataIndex, it = items[k];
+      var base = it ? (it.tip || esc(it.etiqueta)) : esc(p.name);
+      if (p.data && p.data.hijo) base = '<b>' + esc(p.data.hijo) + '</b> · ' + esc(it ? it.etiqueta : '') + '\n' + esc(p.data.texto || '');
+      return String(base).replace(/\n/g, '<br>').replace(/<b>/g, '<b style="color:#9fd8ff">');
+    } };
+}
+function grEcBase() {
+  return { animationDuration: 650, animationEasing: 'cubicOut', animationDurationUpdate: 450,
+    textStyle: { fontFamily: GR_EC_FUENTE, color: GR_EC_TINTA }, aria: { enabled: true } };
+}
+function grEcHayActivo(items) { return items.some(function (it) { return it.activo; }); }
+function grEcOpacidad(items, it) { return grEcHayActivo(items) && !it.activo ? 0.32 : 1; }
+
+// ---------- opciones por tipo ----------
+function grEcOpcion(g, items, series, c) {
+  var tipo = grEcTipo(g, c), o = grEcBase(), multi = series.length > 1, s0 = series[0];
+  o.tooltip = grEcTooltip(items);
+  var etiquetaDe = function (it, s, v) { return it.texto && !multi ? it.texto : grFmt(v, s.fmt); };
+
+  if (tipo === 'dona') {
+    var datos = items.map(function (it, k) { return { k: k, name: it.etiqueta, value: Math.max(num(it.v[s0.k]) || 0, 0),
+      itemStyle: { color: grColor(it, s0, false, k), opacity: grEcOpacidad(items, it) } }; }).filter(function (x) { return x.value > 0; });
+    var total = datos.reduce(function (a, x) { return a + x.value; }, 0);
+    o.series = [{ type: 'pie', radius: ['56%', '82%'], center: ['50%', '50%'], avoidLabelOverlap: true, label: { show: false },
+      itemStyle: { borderColor: '#fff', borderWidth: 2, borderRadius: 4 }, emphasis: { scale: true, scaleSize: 6 }, data: datos }];
+    o.graphic = [{ type: 'group', left: 'center', top: 'middle', children: [
+      { type: 'text', style: { text: s0.fmt(Math.round(total * 100) / 100), x: 0, y: -10, textAlign: 'center', textVerticalAlign: 'middle', fill: GR_EC_TINTA, font: '600 17px ' + GR_EC_FUENTE } },
+      { type: 'text', style: { text: grAbrev(s0.t.toLowerCase(), 22), x: 0, y: 12, textAlign: 'center', textVerticalAlign: 'middle', fill: GR_EC_TENUE, font: '11px ' + GR_EC_FUENTE } }] }];
+    return o;
+  }
+
+  if (tipo === 'embudo') {
+    var vals = items.map(function (it) { return Math.abs(num(it.v[s0.k]) || 0); }), max = Math.max.apply(null, vals.concat([1])), prim = vals[0] || 0;
+    o.grid = { left: 8, right: 8, top: 6, bottom: 6, containLabel: true };
+    o.xAxis = { type: 'value', show: false, max: max };
+    o.yAxis = { type: 'category', inverse: true, data: items.map(function (it) { return it.etiqueta; }), axisLine: { show: false }, axisTick: { show: false },
+      axisLabel: { color: GR_EC_TINTA, fontSize: 12, fontWeight: 600, formatter: function (v) { return grAbrev(v, 24); } } };
+    o.series = [{ type: 'bar', stack: 'e', silent: true, tooltip: { show: false }, itemStyle: { color: 'transparent' }, data: vals.map(function (v) { return (max - v) / 2; }) },
+      { type: 'bar', stack: 'e', barCategoryGap: '18%', cursor: g.filtro ? 'pointer' : 'default',
+        data: items.map(function (it, k) { var v = vals[k], dentro = v >= max * 0.3;
+          return { k: k, value: v, itemStyle: { color: grColor(it, s0, false, k), opacity: grEcOpacidad(items, it), borderRadius: 4 },
+            label: { position: dentro ? 'inside' : 'right', color: dentro ? '#fff' : GR_EC_TINTA } }; }),
+        label: { show: true, fontSize: 12, fontWeight: 600,
+          formatter: function (p) { var it = items[p.data.k]; return grEcTxt(etiquetaDe(it, s0, num(it.v[s0.k]))) + (prim && p.data.k ? '  (' + Math.round(p.data.value / prim * 100) + '%)' : ''); } } }];
+    return o;
+  }
+
+  if (tipo === 'arbol') {
+    var hijosDe = function (it, k, col) {
+      return (it.hijos || []).map(function (h) { var v = Math.abs(num(h.v[s0.k]) || 0);
+        return { k: k, hijo: h.etiqueta, name: h.etiqueta, value: v, texto: grFmt(num(h.v[s0.k]), s0.fmt), itemStyle: { color: col } }; }).filter(function (x) { return x.value > 0; });
+    };
+    o.series = [{ type: 'treemap', roam: false, nodeClick: false, breadcrumb: { show: false }, top: 4, left: 4, right: 4, bottom: 4,
+      squareRatio: 0.9, visibleMin: 1,
+      label: { show: true, color: '#fff', fontSize: 12, overflow: 'truncate', lineHeight: 16,
+        formatter: function (p) { return '{n|' + grEcTxt(p.name) + '}\n{v|' + grEcTxt(p.data.texto || '') + '}'; },
+        rich: { n: { fontSize: 12, fontWeight: 600, color: '#fff' }, v: { fontSize: 11, color: 'rgba(255,255,255,.88)' } } },
+      upperLabel: { show: true, height: 24, color: '#fff', fontWeight: 600, fontSize: 12, padding: [0, 8],
+        formatter: function (p) { return grEcTxt(p.name) + (p.data.texto ? '   ' + grEcTxt(p.data.texto) : ''); } },
+      itemStyle: { borderColor: '#fff', borderWidth: 2, gapWidth: 2 },
+      levels: [{ itemStyle: { borderColor: '#fff', borderWidth: 3, gapWidth: 3 } },
+        { colorSaturation: [0.35, 0.6], itemStyle: { borderColorSaturation: 0.7, gapWidth: 1, borderWidth: 1 } }],
+      data: items.map(function (it, k) {
+        var col = grColor(it, s0, false, k), v = Math.abs(num(it.v[s0.k]) || 0), h = hijosDe(it, k, col);
+        return { k: k, name: it.etiqueta, value: v, texto: grFmt(num(it.v[s0.k]), s0.fmt), children: h.length ? h : undefined,
+          itemStyle: { color: col, opacity: grEcOpacidad(items, it) } };
+      }).filter(function (x) { return x.value > 0; }) }];
+    return o;
+  }
+
+  if (tipo === 'medidor') {
+    var n = items.length || 1;
+    o.series = items.map(function (it, k) {
+      var v = Math.round((num(it.v[s0.k]) || 0) * 10) / 10, tope = it.max || 100, col = it.color || GR_COLORES[k % GR_COLORES.length];
+      return { type: 'gauge', center: [((k + 0.5) / n * 100) + '%', '56%'], radius: Math.min(88, 190 / n + 30) + '%', startAngle: 205, endAngle: -25,
+        min: 0, max: tope, splitNumber: 4,
+        progress: { show: true, width: 14, roundCap: true, itemStyle: { color: v > 0 ? col : 'rgba(0,0,0,0)' } },
+        axisLine: { roundCap: true, lineStyle: { width: 14, color: [[1, '#e9ecef']] } },
+        pointer: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false }, anchor: { show: false },
+        title: { show: true, offsetCenter: [0, '64%'], color: GR_EC_TINTA, fontSize: 12, fontWeight: 600 },
+        detail: { valueAnimation: true, offsetCenter: [0, '2%'], lineHeight: 18,
+          formatter: function (val) { return '{v|' + (Math.round(val * 10) / 10) + '%}\n{s|' + grEcTxt(it.texto || '') + '}'; },
+          rich: { v: { fontSize: 24, fontWeight: 600, color: GR_EC_TINTA, fontFamily: GR_EC_FUENTE },
+            s: { fontSize: 10.5, color: GR_EC_TENUE, fontFamily: GR_EC_FUENTE, padding: [4, 0, 0, 0] } } },
+        data: [{ k: k, name: grEcTxt(it.etiqueta), value: Math.max(0, Math.min(v, tope)) }] };
+    });
+    return o;
+  }
+
+  if (tipo === 'cascada') {
+    // barras flotantes: cada paso sube o baja desde donde quedó el anterior
+    var run = 0, filas = items.map(function (it, k) {
+      var m = num(it.v[s0.k]) || 0, lo, hi, col;
+      if (it.total) { lo = Math.min(0, m); hi = Math.max(0, m); run = m; col = it.color || (m < 0 ? '#b42318' : '#12365b'); }
+      else { var antes = run; run += m; lo = Math.min(antes, run); hi = Math.max(antes, run); col = it.color || (m < 0 ? '#d64550' : '#1aab40'); }
+      return { k: k, value: [k, lo, hi, m], col: col };
+    });
+    o.grid = { left: 8, right: 16, top: 30, bottom: 8, containLabel: true };
+    o.xAxis = { type: 'category', data: items.map(function (it) { return it.etiqueta; }), axisTick: { show: false },
+      axisLine: { lineStyle: { color: '#c8c6c4' } }, axisLabel: { color: GR_EC_TENUE, fontSize: 11, interval: 0, rotate: items.length > 6 ? 28 : 0,
+        formatter: function (v) { return grAbrev(v, 18); } } };
+    o.yAxis = { type: 'value', splitLine: { lineStyle: { color: GR_EC_REJILLA } },
+      axisLabel: { color: GR_EC_TENUE, fontSize: 11, formatter: grEcEje(s0) } };
+    o.series = [{ type: 'custom', encode: { x: 0, y: [1, 2] }, data: filas,
+      renderItem: function (params, api) {
+        var x = api.value(0), a = api.coord([x, api.value(2)]), b = api.coord([x, api.value(1)]), w = api.size([1, 0])[0] * 0.58;
+        var f = filas[params.dataIndex], it = items[f.k], h = Math.max(b[1] - a[1], 1);
+        return { type: 'group', children: [
+          { type: 'rect', shape: { x: a[0] - w / 2, y: a[1], width: w, height: h, r: 3 }, style: { fill: f.col, opacity: grEcOpacidad(items, it) } },
+          { type: 'text', style: { text: s0.fmt(f.value[3]), x: a[0], y: a[1] - 6, textAlign: 'center', textVerticalAlign: 'bottom', fill: GR_EC_TINTA,
+            font: '600 11px ' + GR_EC_FUENTE } }] };
+      } }];
+    return o;
+  }
+
+  // ----- ejes: barras horizontales, columnas, línea y área -----
+  var horiz = tipo === 'barras', esLinea = tipo === 'linea' || tipo === 'area';
+  var etiquetas = items.map(function (it) { return it.etiqueta; });
+  var hayNeg = items.some(function (it) { return series.some(function (s) { return (num(it.v[s.k]) || 0) < 0; }); });
+  var anchoPanel = (document.getElementById(g.id) || {}).clientWidth || 500, largoMax = 0;
+  items.forEach(function (it) { series.forEach(function (s) { largoMax = Math.max(largoMax, String(etiquetaDe(it, s, num(it.v[s.k]))).length); }); });
+  var espacio = (anchoPanel - 90) / Math.max(items.length, 1) * (esLinea ? 1 : 0.72 / series.length);
+  var conValores = horiz || (largoMax * 6.3 <= espacio && items.length * series.length <= (esLinea ? 24 : 20));
+  var ejeCat = { type: 'category', data: etiquetas, axisTick: { show: false }, axisLine: { lineStyle: { color: '#c8c6c4' } },
+    axisLabel: { color: GR_EC_TINTA, fontSize: 11, interval: 0 } };
+  var ejeVal = { type: 'value', splitLine: { lineStyle: { color: GR_EC_REJILLA } }, axisLabel: { color: GR_EC_TENUE, fontSize: 11, formatter: grEcEje(s0) } };
+  if (horiz) {
+    ejeCat.inverse = true;
+    if (g.conSub && !multi) {
+      ejeCat.axisLabel.formatter = function (v, i) { var it = items[i]; return '{a|' + grEcTxt(grAbrev(v, 26)) + '}' + (it && it.sub ? '\n{b|' + grEcTxt(grAbrev(it.sub, 34)) + '}' : ''); };
+      ejeCat.axisLabel.rich = { a: { fontSize: 12, fontWeight: 600, color: GR_EC_TINTA, lineHeight: 16 }, b: { fontSize: 10.5, color: GR_EC_TENUE, lineHeight: 14 } };
+    } else ejeCat.axisLabel.formatter = function (v) { return grAbrev(v, 30); };
+    ejeCat.axisLabel.fontWeight = 500;
+    ejeVal.splitLine.lineStyle.type = 'dashed';
+    o.yAxis = ejeCat; o.xAxis = ejeVal;
+    var der = 70; items.forEach(function (it) { series.forEach(function (s) { der = Math.max(der, String(etiquetaDe(it, s, num(it.v[s.k]))).length * 6.6 + 14); }); });
+    o.grid = { left: 8, right: Math.min(der, 230), top: g.marca ? 26 : 10, bottom: 6, containLabel: true };
+  } else {
+    var giro = items.length > 8 ? 32 : 0;
+    ejeCat.axisLabel.rotate = giro;
+    ejeCat.axisLabel.formatter = function (v) { return grAbrev(v, giro ? 16 : Math.max(8, Math.floor(70 / Math.max(items.length, 1)) + 6)); };
+    if (esLinea) ejeCat.boundaryGap = false;
+    o.xAxis = ejeCat; o.yAxis = ejeVal;
+    o.grid = { left: 8, right: 16, top: multi || g.marca ? 34 : 24, bottom: 6, containLabel: true };
+  }
+  if (multi) o.legend = { show: false };
+  o.series = series.map(function (s, i) {
+    var colorSerie = multi ? s.color : (esLinea ? '#118dff' : null);
+    var datos = items.map(function (it, k) {
+      var v = num(it.v[s.k]), color = multi ? s.color : (v != null && v < 0 && horiz ? '#b42318' : grColor(it, s, false, k));
+      var d = { k: k, value: v == null ? 0 : v, itemStyle: { color: esLinea ? (multi ? s.color : (it.color || colorSerie)) : color, opacity: grEcOpacidad(items, it) } };
+      if (!esLinea) d.itemStyle.borderRadius = horiz ? (v < 0 ? [3, 0, 0, 3] : [0, 3, 3, 0]) : (v < 0 ? [0, 0, 3, 3] : [3, 3, 0, 0]);
+      if (!esLinea && hayNeg) d.label = { position: horiz ? (v < 0 ? 'left' : 'right') : (v < 0 ? 'bottom' : 'top') };
+      return d;
+    });
+    var serie = { name: s.t, type: esLinea ? 'line' : 'bar', data: datos, cursor: g.filtro ? 'pointer' : 'default',
+      label: { show: conValores, position: horiz ? 'right' : 'top', distance: 5, fontSize: multi ? 10 : 11, color: GR_EC_TINTA,
+        formatter: function (p) { var it = items[p.data.k], v = num(it.v[s.k]); return multi && !v ? '' : etiquetaDe(it, s, v); } },
+      emphasis: { focus: 'none', itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,.18)' } } };
+    if (!esLinea) { serie.barMaxWidth = horiz ? 22 : 40; serie.barGap = '18%'; serie.barCategoryGap = horiz ? '34%' : '28%'; }
+    else {
+      serie.smooth = 0.3; serie.symbol = 'circle'; serie.symbolSize = 8; serie.lineStyle = { width: 2.5, color: colorSerie || '#118dff' };
+      serie.itemStyle = { borderColor: '#fff', borderWidth: 1.5 };
+      if (tipo === 'area') serie.areaStyle = { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: hexAlfa(colorSerie || '#118dff', 0.30) }, { offset: 1, color: hexAlfa(colorSerie || '#118dff', 0.02) }]) };
+      if (!multi && !items.some(function (it) { return it.color; })) serie.itemStyle.color = '#118dff';
+    }
+    if (i === 0 && g.marca) {
+      var ml = { silent: true, symbol: 'none', lineStyle: { color: '#605e5c', type: 'dashed', width: 1.2 },
+        label: { formatter: g.marca.texto, color: GR_EC_TENUE, fontSize: 10.5, position: horiz ? 'end' : 'insideEndTop' }, data: [{}] };
+      if (horiz) ml.data[0].xAxis = g.marca.valor; else ml.data[0].yAxis = g.marca.valor;
+      serie.markLine = ml;
+    }
+    return serie;
+  });
+  if (esLinea) o.tooltip.trigger = 'item';
+  return o;
+}
+function hexAlfa(hex, a) {
+  var h = String(hex).replace('#', ''); if (h.length === 3) h = h.split('').map(function (x) { return x + x; }).join('');
+  var n = parseInt(h, 16); return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+}
+
+// HTML del panel: el lienzo (y en la dona, su tabla al lado)
+function grEcHtml(g, items, series, c) {
+  var tipo = grEcTipo(g, c), alto = grEcAlto(g, items, series, tipo), s = series[0];
+  var lienzo = '<div class="gr-ec" id="grEc_' + g.id + '" style="height:' + alto + 'px"></div>';
+  if (tipo !== 'dona') return lienzo;
+  var conValor = items.map(function (it, k) { return { it: it, k: k, v: Math.max(num(it.v[s.k]) || 0, 0) }; }).filter(function (x) { return x.v > 0; });
+  if (!conValor.length) return '<div class="gr-vacio">No hay datos con los filtros actuales.</div>';
+  var total = conValor.reduce(function (a, x) { return a + x.v; }, 0);
+  return '<div class="gr-dona">' + lienzo + '<table><tbody>' + conValor.map(function (x) {
+    var p = Math.round(x.v / total * 100);
+    return '<tr' + grAttrs(g, x.k, x.it) + '><td><i class="tb-punto" style="background:' + grColor(x.it, s, false, x.k) + '"></i>' + esc(x.it.etiqueta) + '</td>' +
+      '<td class="m"><b>' + esc(s.fmt(x.v)) + '</b></td><td class="m gr-pc"><span style="--p:' + p + '%;--c:' + grColor(x.it, s, false, x.k) + '"></span>' + p + '%</td></tr>';
+  }).join('') + '</tbody></table></div>';
+}
+
+// Crea (o reutiliza) la gráfica en su lienzo
+function grEcPintar(g, items, series, c, viejo) {
+  var el = document.getElementById('grEc_' + g.id); if (!el) { grEcLiberar(g.id); return; }
+  var opcion = grEcOpcion(g, items, series, c), ch = GR_EC[g.id];
+  if (viejo && ch && ch.getDom() === viejo) {
+    viejo.style.height = el.style.height; el.parentNode.replaceChild(viejo, el);
+    ch.setOption(opcion, true); ch.resize();
+    return;
+  }
+  grEcLiberar(g.id);
+  ch = GR_EC[g.id] = echarts.init(el, null, { renderer: 'canvas' });
+  ch.setOption(opcion, true);
+  ch.on('click', function (p) {
+    var k = p.data && p.data.k != null ? p.data.k : p.dataIndex;
+    if (p.data && p.data.hijo && g.filtroHijo) { grClicFiltro(g.filtroHijo, p.data.hijo); return; }
+    grClicItem(g.id, k);
+  });
+  ch.on('dblclick', function (p) { var k = p.data && p.data.k != null ? p.data.k : p.dataIndex; grDobleClic(g.id, k); });
+  if (window.ResizeObserver) {
+    var t = null;
+    GR_EC_RO[g.id] = new ResizeObserver(function () { clearTimeout(t); t = setTimeout(function () { if (GR_EC[g.id]) GR_EC[g.id].resize(); }, 60); });
+    GR_EC_RO[g.id].observe(el);
+  }
+}
+// Al imprimir, las gráficas toman el ancho de la hoja
+window.addEventListener('beforeprint', function () { Object.keys(GR_EC).forEach(function (id) { try { GR_EC[id].resize(); } catch (e) { /* nada */ } }); });
+
+// Barras de datos dentro de las celdas (formato condicional, como en Power BI)
+function grBarraCelda(v, max) {
+  if (v == null || !max) return '';
+  var p = Math.min(Math.abs(v) / max * 100, 100), col = v < 0 ? 'rgba(214,69,80,.16)' : 'rgba(17,141,255,.14)';
+  return ' style="background:linear-gradient(90deg,' + col + ' ' + p.toFixed(1) + '%,transparent ' + p.toFixed(1) + '%)"';
+}
+
+// Pequeña línea de tendencia para las tarjetas KPI
+function grSpark(vals, color) {
+  if (!vals || vals.length < 2) return '';
+  var max = Math.max.apply(null, vals), min = Math.min.apply(null, vals), W = 120, H = 30, r = max - min || 1;
+  var pts = vals.map(function (v, i) { return (i / (vals.length - 1) * W).toFixed(1) + ',' + (H - 3 - (v - min) / r * (H - 6)).toFixed(1); });
+  var ult = pts[pts.length - 1].split(',');
+  return '<svg class="kpi-spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+    '<polyline points="0,' + H + ' ' + pts.join(' ') + ' ' + W + ',' + H + '" fill="' + hexAlfa(color, .12) + '" stroke="none"/>' +
+    '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' +
+    '<circle cx="' + ult[0] + '" cy="' + ult[1] + '" r="2.6" fill="' + color + '"/></svg>';
+}
+function grDelta(n, texto, alReves) {
+  if (n == null || isNaN(n)) return '';
+  var cls = n === 0 ? 'igual' : ((n > 0) !== !!alReves ? 'sube' : 'baja');
+  return '<span class="kpi-d ' + cls + '">' + (n > 0 ? '▲ ' : n < 0 ? '▼ ' : '● ') + texto + '</span>';
+}
+function grKpi(color, titulo, valor, sub, extra) {
+  return '<div class="kpi" style="--k:' + color + '"><span class="kpi-t">' + titulo + '</span><b>' + valor + '</b>' +
+    (sub ? '<span class="kpi-s">' + sub + '</span>' : '') + (extra || '') + '</div>';
+}
+
+// Meta de ventas del año (se guarda en este navegador)
+var GR_META = grLeerLocal('br_graficas_meta', { ventas: 0 });
+function grCambiarMeta(v) {
+  GR_META.ventas = Math.max(0, Number(String(v).replace(/[^\d.]/g, '')) || 0);
+  grGuardarLocal('br_graficas_meta', GR_META);
+  var g = GR_GRAFICAS.filter(function (x) { return x.id === 'grMedidores'; })[0];
+  if (g && GR_ULT._datos) grPintar(g, GR_ULT._datos);
 }
 
 // ---------- garantías vendidas por año (hoja "datos de ventas" del Excel de activos) ----------
