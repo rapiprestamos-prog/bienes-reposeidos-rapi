@@ -2697,3 +2697,59 @@ function verClaveInstalacion() {
   mostrar_('Clave de instalación', c + '\n\nSolo sirve para crear el primer administrador (o uno nuevo si se desactivaron todos).');
 }
 function nuevaClaveInstalacion() { mostrar_('Nueva clave de instalación', nuevaClave_()); }
+
+// =============================================================================
+// PASAR LOS DATOS DEL SISTEMA ANTERIOR (SQL Server) A ESTE
+// Lo usa el programa migrar-a-google.js, que Javier corre en el servidor donde
+// está la base BIENES_REPOSEIDOS. Solo un administrador puede usarlo.
+// - Copia las tablas tal cual, con sus mismos números (Id), para que todo siga unido.
+// - Los Excel y archivos guardados en la base se pasan a la carpeta de Drive.
+// - Los usuarios se agregan sin contraseña (el sistema anterior usa otro cifrado):
+//   el administrador les pone una temporal en "Usuarios".
+// - Los avalúos de este sistema no se tocan.
+// =============================================================================
+var TABLAS_MIGRAR = ['BR_Usuario', 'BR_Plantilla', 'BR_Carga', 'BR_Venta', 'BR_Visita', 'BR_ResumenEjecutivo', 'BR_Trazabilidad', 'BR_VentaAnterior',
+  'BR_Desalojo', 'BR_Mejora', 'BR_Finca', 'BR_FincaHistorial', 'BR_VentaManual', 'BR_Gestion', 'BR_Contacto', 'BR_Documento', 'BR_Alquiler',
+  'BR_AlquilerCuota', 'BR_Config', 'BR_Bitacora'];
+var ARCHIVO_MIGRAR = { BR_Carga: 'ArchivoId', BR_Plantilla: 'ArchivoId', BR_Documento: 'AdjuntoId' };
+
+ruta_('POST', '/api/bienes/migrar', 'admin', function (ctx) {
+  var b = ctx.body || {};
+  if (b.accion === 'estado') {
+    return { success: true, tablas: TABLAS_MIGRAR.map(function (t) { return { tabla: t, filas: T_(t).length }; }) };
+  }
+  if (b.accion === 'fin') {
+    bitacora_(ctx, 'MIGRAR', 'Se pasaron los datos del sistema anterior (SQL Server): ' + String(b.resumen || '').slice(0, 900));
+    return { success: true };
+  }
+  var t = String(b.tabla || '');
+  if (TABLAS_MIGRAR.indexOf(t) === -1) throw err_('Tabla no permitida: ' + t, 400);
+  var campoArch = ARCHIVO_MIGRAR[t] || null, quitados = 0;
+  // Primera tanda: se vacía la tabla (los usuarios, la configuración y la bitácora de aquí se conservan)
+  if (b.primera && ['BR_Usuario', 'BR_Config', 'BR_Bitacora'].indexOf(t) === -1) {
+    if (campoArch) T_(t).forEach(function (f) { borrarArchivo_(f[campoArch]); });
+    quitados = del_(t, function () { return true; });
+  }
+  if (b.primera && t === 'BR_Config') quitarCfg_(['activos_version', 'activos_pie']);
+  var usados = {}, n = 0, saltados = [];
+  if (t === 'BR_Usuario') T_(t).forEach(function (u) { usados[String(u.Usuario).toLowerCase()] = 1; });
+  var idsUsuario = {}; if (t === 'BR_Usuario') T_(t).forEach(function (u) { idsUsuario[u.Id] = 1; });
+  (b.filas || []).forEach(function (f) {
+    var o = {};
+    Object.keys(f).forEach(function (k) { if (k.indexOf('__') !== 0) o[k] = f[k]; });
+    if (t === 'BR_Usuario') {
+      if (usados[String(o.Usuario).toLowerCase()]) { saltados.push(o.Usuario + ' (ya existe aquí)'); return; }
+      if (idsUsuario[o.Id]) delete o.Id;
+      o.Hash = 'migrado$sin-clave'; o.DebeCambiar = true; o.Intentos = 0; o.BloqueadoHasta = null; o.SesionVersion = 1;
+    }
+    if (t === 'BR_Config' && ['activos_version', 'activos_pie'].indexOf(o.Clave) === -1) return;
+    if (t === 'BR_Bitacora') delete o.Id;
+    if (campoArch) {
+      o[campoArch] = null;
+      if (f.__archivoB64) o[campoArch] = guardarArchivo_(f.__archivoNombre || 'archivo', f.__archivoB64).id;
+    }
+    if (t === 'BR_Carga' && f.__lectura) o.Lectura = f.__lectura;
+    ins_(t, o); n++;
+  });
+  return { success: true, tabla: t, insertadas: n, quitadas: quitados, saltados: saltados };
+});
