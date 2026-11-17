@@ -72,16 +72,3 @@ Cada Excel queda en el historial de cargas con su archivo original, que se puede
 | `apps-script/Code.gs` | El servidor (Apps Script) |
 | `Privado.gs` | **No está en el repositorio.** Plantillas de documentos y listado inicial de avalúos |
 
-## Pasar los datos del sistema anterior (SQL Server)
-
-Para traer todo lo que ya existe en la base BIENES_REPOSEIDOS (cortes con sus Excel, fincas, ventas,
-trazabilidad, visitas, gestiones, contactos, documentos, plantillas y alquileres):
-
-1. Copia `migrar-a-google.js` en la carpeta del sistema anterior (donde está `server.js` y `node_modules`).
-2. En esa carpeta abre una ventana de comandos y escribe: `node migrar-a-google.js`
-3. Escribe tu usuario y contraseña de **este** sistema (administrador), revisa el resumen y escribe `SI`.
-
-- Solo lee la base anterior: no la cambia. Usa la conexión de `bienesReposeidos.js` y `bienes-reposeidos.config`
-  (ese archivo nunca se sube a GitHub).
-- Los avalúos de este sistema no se tocan.
-- Los usuarios del sistema anterior se agregan sin contraseña (usa otro cifrado): ponles una temporal en **Usuarios**.
