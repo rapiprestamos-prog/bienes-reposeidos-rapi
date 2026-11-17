@@ -815,48 +815,34 @@ body.sin-sesion #vistaActivos { display: none !important; }
    títulos sobrios, segmentadores a la izquierda y tarjetas KPI.
    Solo apariencia: no cambia ningún dato ni función.
    ===================================================================== */
-:root {
+body[data-vista="graficas"] {
   --fondo: #f3f2f1; --papel: #ffffff; --tinta: #252423; --tenue: #605e5c; --linea: #e1dfdd; --celda: #faf9f8;
   --azul: #12365b; --acento: #118dff; --acento-suave: #e6f2ff;
   --radio: 10px; --radio-chico: 6px;
   --sombra: 0 1.6px 3.6px rgba(0,0,0,.09), 0 .3px .9px rgba(0,0,0,.07);
   --sombra-hover: 0 6.4px 14.4px rgba(0,0,0,.12), 0 1.2px 3.6px rgba(0,0,0,.09);
 }
-body { font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+body[data-vista="graficas"] { font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
   letter-spacing: 0; background: var(--fondo); color: var(--tinta); }
 
-/* barra superior: azul de la marca, sólida */
-.barra { background: #0f2c4b; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 rgba(255,255,255,.06), 0 2px 8px rgba(0,0,0,.18); }
-.barra h1 { font-weight: 600; letter-spacing: 0; }
-.barra h1::before { border-radius: 5px; }
-
-/* menú de secciones: pestañas planas con subrayado */
-.vistas { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: 1px solid var(--linea);
-  box-shadow: 0 1px 3px rgba(0,0,0,.05); justify-content: flex-start; padding: 0 22px; gap: 2px; }
-.vistas button { border-radius: 0; padding: 12px 14px 10px; color: var(--tenue); opacity: 1; font-weight: 600; font-size: .88rem;
-  border-bottom: 3px solid transparent; background: transparent; transition: color .15s, border-color .15s, background .15s; }
-.vistas button:hover { color: var(--tinta); background: #faf9f8; }
-.vistas button[aria-current="page"] { color: var(--azul); background: transparent; box-shadow: none; border-bottom-color: var(--acento); }
-
 /* visuales (paneles) */
-.panel, .hoja, .barra-corte, .cuadro, .tarjeta-acceso, .ed-cab, .gr-panel { border: 1px solid #edebe9 !important; border-radius: var(--radio);
+body[data-vista="graficas"] .panel, body[data-vista="graficas"] .hoja, body[data-vista="graficas"] .barra-corte, body[data-vista="graficas"] .cuadro, body[data-vista="graficas"] .tarjeta-acceso, body[data-vista="graficas"] .ed-cab, body[data-vista="graficas"] .gr-panel { border: 1px solid #edebe9 !important; border-radius: var(--radio);
   box-shadow: var(--sombra); background: var(--papel); }
-.panel h2, .tablero h2 { font-size: 1rem; font-weight: 600; letter-spacing: 0; color: var(--tinta); }
-.btn { border-radius: var(--radio-chico); font-weight: 600; }
-.btn.prim { background: var(--acento); }
-.btn.prim:hover:not(:disabled) { background: #0f7ae0; }
-.barra .btn { border-radius: var(--radio-chico); }
+body[data-vista="graficas"] .panel h2, body[data-vista="graficas"] .tablero h2 { font-size: 1rem; font-weight: 600; letter-spacing: 0; color: var(--tinta); }
+body[data-vista="graficas"] .btn { border-radius: var(--radio-chico); font-weight: 600; }
+body[data-vista="graficas"] .btn.prim { background: var(--acento); }
+body[data-vista="graficas"] .btn.prim:hover:not(:disabled) { background: #0f7ae0; }
 
 /* tarjetas (todas las secciones): una tarjeta por indicador con franja de color */
-.tarjetas-g { gap: 12px; background: transparent; border: 0 !important; box-shadow: none !important; overflow: visible; }
-.tarjetas-g > div { background: var(--papel); border: 1px solid #edebe9 !important; border-radius: var(--radio); box-shadow: var(--sombra);
+body[data-vista="graficas"] .tarjetas-g { gap: 12px; background: transparent; border: 0 !important; box-shadow: none !important; overflow: visible; }
+body[data-vista="graficas"] .tarjetas-g > div { background: var(--papel); border: 1px solid #edebe9 !important; border-radius: var(--radio); box-shadow: var(--sombra);
   border-top: 3px solid var(--k, var(--acento)) !important; transition: box-shadow .15s, transform .15s; }
-.tarjetas-g > div:nth-child(6n+2) { --k: #00b0f0; } .tarjetas-g > div:nth-child(6n+3) { --k: #1aab40; }
-.tarjetas-g > div:nth-child(6n+4) { --k: #e66c37; } .tarjetas-g > div:nth-child(6n+5) { --k: #744ec2; } .tarjetas-g > div:nth-child(6n) { --k: #d64550; }
-.tarjetas-g > div:nth-child(6n+1) { --k: #12365b; }
-.tarjetas-g.clic div:hover { background: var(--papel); box-shadow: var(--sombra-hover); transform: translateY(-1px); }
-.tarjetas-g div.activa { box-shadow: 0 0 0 2px var(--acento), var(--sombra); }
-.tarjetas-g b { font-weight: 600; letter-spacing: 0; color: var(--tinta); }
+body[data-vista="graficas"] .tarjetas-g > div:nth-child(6n+2) { --k: #00b0f0; } body[data-vista="graficas"] .tarjetas-g > div:nth-child(6n+3) { --k: #1aab40; }
+body[data-vista="graficas"] .tarjetas-g > div:nth-child(6n+4) { --k: #e66c37; } body[data-vista="graficas"] .tarjetas-g > div:nth-child(6n+5) { --k: #744ec2; } body[data-vista="graficas"] .tarjetas-g > div:nth-child(6n) { --k: #d64550; }
+body[data-vista="graficas"] .tarjetas-g > div:nth-child(6n+1) { --k: #12365b; }
+body[data-vista="graficas"] .tarjetas-g.clic div:hover { background: var(--papel); box-shadow: var(--sombra-hover); transform: translateY(-1px); }
+body[data-vista="graficas"] .tarjetas-g div.activa { box-shadow: 0 0 0 2px var(--acento), var(--sombra); }
+body[data-vista="graficas"] .tarjetas-g b { font-weight: 600; letter-spacing: 0; color: var(--tinta); }
 
 /* tarjetas KPI de las gráficas */
 .tarjetas-g.kpis { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
@@ -920,13 +906,13 @@ body[data-vista="graficas"]:not(.sin-sesion) #vistaGraficas { display: grid; gri
 .gr-det summary { font-size: .8rem; color: #0b5cad; cursor: pointer; margin-top: 6px; }
 
 /* tablas: encabezado gris, filas con hover suave */
-table.datos th, .tb-tabla th { background: #faf9f8; color: var(--tenue); font-size: .76rem; font-weight: 600; }
-table.datos tbody tr:hover td, .tb-tabla tbody tr:hover td { background: #f3f9ff; }
+body[data-vista="graficas"] table.datos th, body[data-vista="graficas"] .tb-tabla th { background: #faf9f8; color: var(--tenue); font-size: .76rem; font-weight: 600; }
+body[data-vista="graficas"] table.datos tbody tr:hover td, body[data-vista="graficas"] .tb-tabla tbody tr:hover td { background: #f3f9ff; }
 
 /* ventanas */
-dialog { border-radius: 12px !important; }
-.av-tarjetas button { border-radius: var(--radio); border: 1px solid #edebe9; }
-.av-comp > div { border-radius: var(--radio); }
+body[data-vista="graficas"] dialog { border-radius: 12px !important; }
+body[data-vista="graficas"] .av-tarjetas button { border-radius: var(--radio); border: 1px solid #edebe9; }
+body[data-vista="graficas"] .av-comp > div { border-radius: var(--radio); }
 @media print { body[data-vista="graficas"] #vistaGraficas { display: block !important; } .kpi .kpi-spark { display: none; } }
 </style>
 </head>
